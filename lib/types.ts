@@ -61,6 +61,7 @@ export interface Debrief {
 export interface Comment {
   id: string;
   debrief_id: string;
+  directive_id?: string;
   author: string;
   organisation: string;
   body: string;

@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Check, Send, Trash2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Check, CheckCircle2, Send, Trash2, Loader2 } from 'lucide-react';
+import { notifyDebriefPublished } from '@/lib/notifications';
 import RealitySection from './sections/RealitySection';
 import ActionsInactionsSection from './sections/ActionsInactionsSection';
 import DirectivesSection from './sections/DirectivesSection';
@@ -17,6 +18,7 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<string | null>(initial.updated_at);
   const [publishing, setPublishing] = useState(false);
+  const [published, setPublished] = useState(false);
   const dirty = useRef(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -66,7 +68,10 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
       content: d.content, author: d.author, organisation: d.organisation,
     });
     await publishDebrief(d.id);
-    router.push(`/debrief/${d.id}`);
+    setPublishing(false);
+    setPublished(true);
+    notifyDebriefPublished(d.title, d.id);
+    setTimeout(() => router.push('/'), 2500);
   };
 
   const handleDelete = async () => {
@@ -74,6 +79,23 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
     await deleteDebrief(d.id);
     router.push('/');
   };
+
+  if (published) {
+    return (
+      <div className="flex min-h-[70vh] flex-col items-center justify-center gap-5 px-6">
+        <div
+          className="flex h-16 w-16 items-center justify-center rounded-full"
+          style={{ background: 'rgba(39,174,96,0.12)', border: '1px solid rgba(39,174,96,0.35)' }}
+        >
+          <CheckCircle2 size={32} className="text-[var(--nr-green)]" />
+        </div>
+        <div className="text-center">
+          <h2 className="serif mb-2 text-[28px] text-[var(--ink-100)]">Debrief Published</h2>
+          <p className="font-mono text-[13px] text-[var(--ink-500)]">Returning to dashboard…</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-6">

@@ -7,6 +7,7 @@ import { Debrief } from '@/lib/types';
 import { revertToDraft } from '@/lib/store';
 import { fmtDate, fmtDateTime } from '@/lib/format';
 import CommentThread from './CommentThread';
+import DirectiveThread from './DirectiveThread';
 
 export default function DebriefReview({ initial }: { initial: Debrief }) {
   const router = useRouter();
@@ -117,6 +118,11 @@ export default function DebriefReview({ initial }: { initial: Debrief }) {
                     <div className="rd-muted font-mono text-[12px] text-[var(--ink-500)]">
                       ⟶ {b.directive}
                     </div>
+                    <DirectiveThread
+                      debriefId={d.id}
+                      directiveId={b.id}
+                      debriefTitle={d.title}
+                    />
                   </div>
                 ))}
             </div>
@@ -130,7 +136,7 @@ export default function DebriefReview({ initial }: { initial: Debrief }) {
 
       {/* Commentary (screen only) */}
       <div className="no-print">
-        <CommentThread debriefId={d.id} />
+        <CommentThread debriefId={d.id} debriefTitle={d.title} />
       </div>
     </div>
   );

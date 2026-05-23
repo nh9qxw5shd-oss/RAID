@@ -5,8 +5,9 @@ import { Send, MessageSquare } from 'lucide-react';
 import { Comment } from '@/lib/types';
 import { listComments, addComment } from '@/lib/store';
 import { fmtDateTime } from '@/lib/format';
+import { notifyCommentAdded } from '@/lib/notifications';
 
-export default function CommentThread({ debriefId }: { debriefId: string }) {
+export default function CommentThread({ debriefId, debriefTitle = '' }: { debriefId: string; debriefTitle?: string }) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [author, setAuthor] = useState('');
   const [org, setOrg] = useState('');
@@ -27,6 +28,7 @@ export default function CommentThread({ debriefId }: { debriefId: string }) {
     setComments((prev) => [...prev, c]);
     setBody('');
     setPosting(false);
+    notifyCommentAdded(debriefTitle);
   };
 
   return (
