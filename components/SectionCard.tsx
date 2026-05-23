@@ -19,8 +19,8 @@ export default function SectionCard({
         <span className="pill" style={{ background: 'var(--nr-orange-glow)', border: '1px solid rgba(224,82,6,0.3)', color: 'var(--nr-orange)' }}>
           {badge}
         </span>
-        <h2 className="flex-1 text-[13px] font-semibold text-[var(--ink-200)]">{title}</h2>
-        {hint && <span className="hidden font-mono text-[10px] text-[var(--ink-500)] sm:block">{hint}</span>}
+        <h2 className="flex-1 text-[15px] font-semibold text-[var(--ink-200)]">{title}</h2>
+        {hint && <span className="hidden font-mono text-[12px] text-[var(--ink-500)] sm:block">{hint}</span>}
       </div>
       <div className="p-5">{children}</div>
     </section>

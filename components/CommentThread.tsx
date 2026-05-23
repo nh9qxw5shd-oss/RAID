@@ -36,15 +36,15 @@ export default function CommentThread({ debriefId }: { debriefId: string }) {
         style={{ background: 'linear-gradient(180deg, var(--bg-card-hi), var(--bg-card))' }}
       >
         <MessageSquare size={14} className="text-[var(--nr-orange)]" />
-        <h2 className="flex-1 text-[13px] font-semibold">Commentary</h2>
-        <span className="font-mono text-[11px] text-[var(--ink-500)]">{comments.length}</span>
+        <h2 className="flex-1 text-[15px] font-semibold">Commentary</h2>
+        <span className="font-mono text-[13px] text-[var(--ink-500)]">{comments.length}</span>
       </div>
 
       <div className="p-5">
         {loading ? (
-          <p className="font-mono text-[11px] text-[var(--ink-500)]">Loading…</p>
+          <p className="font-mono text-[13px] text-[var(--ink-500)]">Loading…</p>
         ) : comments.length === 0 ? (
-          <p className="mb-4 font-mono text-[11px] text-[var(--ink-500)]">
+          <p className="mb-4 font-mono text-[13px] text-[var(--ink-500)]">
             No commentary yet. Be the first to respond.
           </p>
         ) : (
@@ -52,17 +52,17 @@ export default function CommentThread({ debriefId }: { debriefId: string }) {
             {comments.map((c) => (
               <li key={c.id} className="rounded border border-[var(--line)] bg-[var(--bg-panel)] p-3.5">
                 <div className="mb-1.5 flex items-baseline justify-between gap-3">
-                  <span className="text-[13px] font-semibold text-[var(--ink-100)]">
+                  <span className="text-[15px] font-semibold text-[var(--ink-100)]">
                     {c.author}
                     {c.organisation && (
                       <span className="ml-2 font-normal text-[var(--ink-400)]">· {c.organisation}</span>
                     )}
                   </span>
-                  <span className="shrink-0 font-mono text-[10px] text-[var(--ink-500)]">
+                  <span className="shrink-0 font-mono text-[12px] text-[var(--ink-500)]">
                     {fmtDateTime(c.created_at)}
                   </span>
                 </div>
-                <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-[var(--ink-300)]">
+                <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--ink-300)]">
                   {c.body}
                 </p>
               </li>

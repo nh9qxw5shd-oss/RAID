@@ -83,7 +83,7 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
           <ArrowLeft size={14} /> Dashboard
         </Link>
         <div className="flex items-center gap-3">
-          <span className="font-mono text-[11px] text-[var(--ink-500)]">
+          <span className="font-mono text-[13px] text-[var(--ink-500)]">
             {saving ? (
               <span className="inline-flex items-center gap-1.5">
                 <Loader2 size={12} className="animate-spin" /> Saving…

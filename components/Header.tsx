@@ -30,7 +30,7 @@ export default function Header() {
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
         <Link href="/" className="flex items-center gap-3">
           <span
-            className="font-mono text-[15px] font-medium uppercase tracking-[0.14em] text-[var(--nr-orange)]"
+            className="font-mono text-[17px] font-medium uppercase tracking-[0.14em] text-[var(--nr-orange)]"
             style={{ textShadow: '0 0 18px rgba(224,82,6,0.4)' }}
           >
             RAID
@@ -45,7 +45,7 @@ export default function Header() {
               Local mode
             </span>
           )}
-          <span className="font-mono text-[11px] text-[var(--ink-500)]">{now}</span>
+          <span className="font-mono text-[13px] text-[var(--ink-500)]">{now}</span>
         </div>
       </div>
     </header>
