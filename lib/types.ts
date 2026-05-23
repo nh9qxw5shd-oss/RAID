@@ -3,16 +3,12 @@
 export type DebriefStatus = 'draft' | 'published';
 
 export const INCIDENT_TYPES = [
-  'Service Disruption',
-  'Possession Overrun',
-  'Unplanned Obstruction',
   'Infrastructure Fault',
-  'Asset Failure',
-  'Signalling Failure',
-  'Delay Attribution',
-  'Resource Availability',
-  'Communications Failure',
+  'Possession Overrun',
+  'Weather Event',
   'Safety Event',
+  'Train Fault',
+  'Irregularity',
   'Other',
 ] as const;
 

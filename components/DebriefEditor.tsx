@@ -79,9 +79,12 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
     <div className="mx-auto max-w-5xl px-6 py-6">
       {/* Top bar */}
       <div className="no-print mb-5 flex items-center justify-between">
-        <Link href="/" className="btn btn-ghost">
-          <ArrowLeft size={14} /> Dashboard
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link href="/" className="btn btn-ghost">
+            <ArrowLeft size={14} /> Dashboard
+          </Link>
+          <span className="font-mono text-[12px] text-[var(--ink-500)]">progress is saved automatically</span>
+        </div>
         <div className="flex items-center gap-3">
           <span className="font-mono text-[13px] text-[var(--ink-500)]">
             {saving ? (
@@ -138,12 +141,6 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
       />
       <DirectivesSection blocks={d.content.directives} onChange={setDirectives} />
 
-      <div className="no-print mt-5 flex justify-end gap-3">
-        <button className="btn btn-primary" onClick={handlePublish} disabled={publishing}>
-          {publishing ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
-          Publish debrief
-        </button>
-      </div>
     </div>
   );
 }
