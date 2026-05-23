@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Download, Undo2 } from 'lucide-react';
-import { Debrief, IlrAnswer, IlrReview } from '@/lib/types';
-import { revertToDraft } from '@/lib/store';
+import { Comment, Debrief, IlrAnswer, IlrReview } from '@/lib/types';
+import { revertToDraft, listAllComments } from '@/lib/store';
 import { fmtDate, fmtDateTime } from '@/lib/format';
 import CommentThread from './CommentThread';
 import DirectiveThread from './DirectiveThread';
@@ -16,11 +16,34 @@ export default function DebriefReview({ initial }: { initial: Debrief }) {
   const d = initial;
   const [revertOpen, setRevertOpen] = useState(false);
 
+  // Fetch all comments once on mount — used to render them in the PDF
+  const [allComments, setAllComments] = useState<Comment[]>([]);
+  useEffect(() => {
+    listAllComments(d.id).then(setAllComments).catch(() => {/* best-effort */});
+  }, [d.id]);
+
+  // Group replies by directive_id for the print-only directive reply blocks
+  const repliesByDirective = useMemo(() => {
+    const map = new Map<string, Comment[]>();
+    for (const c of allComments) {
+      if (c.directive_id) {
+        const existing = map.get(c.directive_id) ?? [];
+        map.set(c.directive_id, [...existing, c]);
+      }
+    }
+    return map;
+  }, [allComments]);
+
+  const generalComments = useMemo(
+    () => allComments.filter((c) => !c.directive_id),
+    [allComments],
+  );
+
   const doRevert = async () => {
     setRevertOpen(false);
     await revertToDraft(d.id);
-    router.push(`/debrief/${d.id}`);
-    router.refresh();
+    // Return to dashboard so user sees the debrief now listed as draft
+    router.push('/');
   };
 
   const meta = [
@@ -114,37 +137,84 @@ export default function DebriefReview({ initial }: { initial: Debrief }) {
             <div className="space-y-4">
               {d.content.directives
                 .filter((b) => b.to || b.questions.some((q) => q.text))
-                .map((b) => (
-                  <div key={b.id} className="rd-rule border-l-2 border-[var(--line-hi)] pl-4">
-                    <div className="mb-1.5 font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--ink-400)]">
-                      To: <span className="rd-accent text-[var(--nr-orange)]">{b.to || '—'}</span>
+                .map((b) => {
+                  const replies = repliesByDirective.get(b.id) ?? [];
+                  return (
+                    <div key={b.id} className="rd-rule border-l-2 border-[var(--line-hi)] pl-4">
+                      <div className="mb-1.5 font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--ink-400)]">
+                        To: <span className="rd-accent text-[var(--nr-orange)]">{b.to || '—'}</span>
+                      </div>
+                      <ol className="mb-2 space-y-1">
+                        {b.questions
+                          .filter((q) => q.text)
+                          .map((q, i) => (
+                            <li key={q.id} className="flex gap-2 text-[15px] text-[var(--ink-300)]">
+                              <span className="font-mono text-[13px] text-[var(--ink-500)]">Q{i + 1}</span>
+                              {q.text}
+                            </li>
+                          ))}
+                      </ol>
+                      <div className="rd-muted font-mono text-[12px] text-[var(--ink-500)]">
+                        ⟶ {b.directive}
+                      </div>
+
+                      {/* Screen: interactive reply thread */}
+                      <DirectiveThread
+                        debriefId={d.id}
+                        directiveId={b.id}
+                        debriefTitle={d.title}
+                      />
+
+                      {/* Print-only: static reply list */}
+                      {replies.length > 0 && (
+                        <div className="print-only mt-2 space-y-2">
+                          <div className="print-reply-meta font-mono text-[11px] uppercase tracking-wide">
+                            Responses ({replies.length})
+                          </div>
+                          {replies.map((c) => (
+                            <div key={c.id} className="print-reply">
+                              <div className="print-reply-meta">
+                                {c.author}{c.organisation ? ` · ${c.organisation}` : ''} &nbsp;·&nbsp; {fmtDateTime(c.created_at)}
+                              </div>
+                              <div className="print-reply-body">{c.body}</div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <ol className="mb-2 space-y-1">
-                      {b.questions
-                        .filter((q) => q.text)
-                        .map((q, i) => (
-                          <li key={q.id} className="flex gap-2 text-[15px] text-[var(--ink-300)]">
-                            <span className="font-mono text-[13px] text-[var(--ink-500)]">Q{i + 1}</span>
-                            {q.text}
-                          </li>
-                        ))}
-                    </ol>
-                    <div className="rd-muted font-mono text-[12px] text-[var(--ink-500)]">
-                      ⟶ {b.directive}
-                    </div>
-                    <DirectiveThread
-                      debriefId={d.id}
-                      directiveId={b.id}
-                      debriefTitle={d.title}
-                    />
-                  </div>
-                ))}
+                  );
+                })}
             </div>
           )}
         </Block>
 
         {/* ILR Stage 1 Review */}
         {d.content.ilrReview && <IlrReviewBlock review={d.content.ilrReview} />}
+
+        {/* Print-only: general comments */}
+        {generalComments.length > 0 && (
+          <div className="print-only">
+            <div className="mb-3 flex items-center gap-2.5 border-t border-[var(--line)] pt-5">
+              <span
+                className="rd-accent flex h-6 w-6 items-center justify-center rounded font-mono text-[14px] font-medium"
+                style={{ background: 'var(--nr-orange-glow)', color: 'var(--nr-orange)' }}
+              >
+                C
+              </span>
+              <h2 className="text-[16px] font-semibold text-[var(--ink-100)]">General Commentary</h2>
+            </div>
+            <div className="space-y-3" style={{ paddingLeft: '2.125rem' }}>
+              {generalComments.map((c) => (
+                <div key={c.id} className="print-reply">
+                  <div className="print-reply-meta">
+                    {c.author}{c.organisation ? ` · ${c.organisation}` : ''} &nbsp;·&nbsp; {fmtDateTime(c.created_at)}
+                  </div>
+                  <div className="print-reply-body">{c.body}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <footer className="rd-rule rd-muted mt-6 border-t border-[var(--line)] pt-4 font-mono text-[12px] text-[var(--ink-500)]">
           RAID Incident Debrief · Generated {fmtDateTime(new Date().toISOString())}
@@ -231,46 +301,46 @@ function IlrReviewBlock({ review }: { review: IlrReview }) {
         <h2 className="text-[16px] font-semibold text-[var(--ink-100)]">Stage 1 Review</h2>
       </div>
       <div style={{ paddingLeft: '2.125rem' }}>
-      <div className="space-y-3">
-        {ILR_QUESTIONS.map(({ key, label }, i) => {
-          const a = review[key];
-          return (
-            <div key={key} className="border-b border-[var(--line)] pb-3 last:border-0 last:pb-0">
-              <div className="flex items-start justify-between gap-4">
-                <span className="text-[14px] leading-snug text-[var(--ink-300)]">
-                  <span className="mr-2 font-mono text-[12px] text-[var(--nr-orange)]">Q{i + 1}</span>
-                  {label}
-                </span>
-                <IlrAnswerPill answer={a.answer} />
+        <div className="space-y-3">
+          {ILR_QUESTIONS.map(({ key, label }, i) => {
+            const a = review[key];
+            return (
+              <div key={key} className="border-b border-[var(--line)] pb-3 last:border-0 last:pb-0">
+                <div className="flex items-start justify-between gap-4">
+                  <span className="text-[14px] leading-snug text-[var(--ink-300)]">
+                    <span className="mr-2 font-mono text-[12px] text-[var(--nr-orange)]">Q{i + 1}</span>
+                    {label}
+                  </span>
+                  <IlrAnswerPill answer={a.answer} />
+                </div>
+                {/* Extra detail (Q2) */}
+                {key === 'q2' && a.answer === 'yes' && (a.level || a.escalated) && (
+                  <div className="mt-1.5 flex flex-wrap gap-4 pl-6 font-mono text-[12px] text-[var(--ink-400)]">
+                    {a.level && <span>Level: <span className="text-[var(--ink-200)]">{a.level}</span></span>}
+                    {a.escalated && (
+                      <span>Escalated: <span className="text-[var(--ink-200)]">{a.escalated === 'yes' ? 'Yes' : 'No'}</span></span>
+                    )}
+                  </div>
+                )}
+                {/* Extra detail (Q4) */}
+                {key === 'q4' && a.answer === 'yes' && (a.huddleTime || a.furtherHuddles) && (
+                  <div className="mt-1.5 flex flex-wrap gap-4 pl-6 font-mono text-[12px] text-[var(--ink-400)]">
+                    {a.huddleTime && <span>First huddle: <span className="text-[var(--ink-200)]">{a.huddleTime}</span></span>}
+                    {a.furtherHuddles && (
+                      <span>Further huddles: <span className="text-[var(--ink-200)]">{a.furtherHuddles === 'yes' ? 'Yes' : 'No'}</span></span>
+                    )}
+                  </div>
+                )}
+                {/* Comment */}
+                {a.comment && (
+                  <p className="mt-1.5 pl-6 text-[13px] italic leading-relaxed text-[var(--ink-400)]">
+                    {a.comment}
+                  </p>
+                )}
               </div>
-              {/* Extra detail (Q2) */}
-              {key === 'q2' && a.answer === 'yes' && (a.level || a.escalated) && (
-                <div className="mt-1.5 flex flex-wrap gap-4 pl-6 font-mono text-[12px] text-[var(--ink-400)]">
-                  {a.level && <span>Level: <span className="text-[var(--ink-200)]">{a.level}</span></span>}
-                  {a.escalated && (
-                    <span>Escalated: <span className="text-[var(--ink-200)]">{a.escalated === 'yes' ? 'Yes' : 'No'}</span></span>
-                  )}
-                </div>
-              )}
-              {/* Extra detail (Q4) */}
-              {key === 'q4' && a.answer === 'yes' && (a.huddleTime || a.furtherHuddles) && (
-                <div className="mt-1.5 flex flex-wrap gap-4 pl-6 font-mono text-[12px] text-[var(--ink-400)]">
-                  {a.huddleTime && <span>First huddle: <span className="text-[var(--ink-200)]">{a.huddleTime}</span></span>}
-                  {a.furtherHuddles && (
-                    <span>Further huddles: <span className="text-[var(--ink-200)]">{a.furtherHuddles === 'yes' ? 'Yes' : 'No'}</span></span>
-                  )}
-                </div>
-              )}
-              {/* Comment */}
-              {a.comment && (
-                <p className="mt-1.5 pl-6 text-[13px] italic leading-relaxed text-[var(--ink-400)]">
-                  {a.comment}
-                </p>
-              )}
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
       </div>
     </section>
   );

@@ -182,6 +182,11 @@ main { position: relative; z-index: 1; }
 ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--line-hi); }
 
+/* Hidden on screen, visible only when printing */
+@media screen {
+  .print-only { display: none !important; }
+}
+
 @media print {
   body::before, body::after { display: none !important; }
   html, body { background: #fff !important; color: #111 !important; }
@@ -191,5 +196,8 @@ main { position: relative; z-index: 1; }
   .report-document .rd-rule { border-color: #ccc !important; }
   .report-document .rd-accent { color: #E05206 !important; }
   .report-document .rd-muted { color: #555 !important; }
+  .report-document .print-reply { border-left: 2px solid #ccc; padding-left: 10px; margin-top: 6px; page-break-inside: avoid; }
+  .report-document .print-reply-meta { font-size: 11px; color: #666; margin-bottom: 3px; }
+  .report-document .print-reply-body { font-size: 13px; color: #222; white-space: pre-wrap; }
   @page { margin: 18mm 16mm; }
 }
