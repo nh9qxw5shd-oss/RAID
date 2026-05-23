@@ -1,10 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <rect width="512" height="512" rx="96" fill="#0B1226"/>
-  <!-- Handle -->
-  <rect x="224" y="352" width="64" height="144" rx="24" fill="#4A6FA5"/>
-  <!-- Cup -->
-  <path d="M160 272 L352 272 L320 352 L192 352 Z" fill="#7A8BA8"/>
-  <!-- Flame -->
-  <path d="M256 32C208 96 160 160 160 224C160 272 184 312 216 336C208 304 216 272 240 248C240 288 224 320 224 344C240 336 256 312 256 280C256 312 272 336 288 344C288 320 272 288 272 248C296 272 304 304 296 336C328 312 352 272 352 224C352 160 304 96 256 32Z" fill="#E05206"/>
-  <path d="M256 248C248 280 248 312 256 336C264 312 264 280 256 248Z" fill="#FFB347" opacity="0.8"/>
+  <g transform="rotate(-45, 256, 256)">
+    <!-- Handle/body -->
+    <rect x="36" y="228" width="260" height="56" rx="20" fill="#E05206"/>
+    <!-- Head (wider at lens end) -->
+    <path d="M296 196 L400 212 L400 300 L296 316 Z" fill="#E05206"/>
+    <!-- Light beams from lens -->
+    <line x1="408" y1="205" x2="472" y2="164" stroke="#E05206" stroke-width="20" stroke-linecap="round" opacity="0.55"/>
+    <line x1="408" y1="256" x2="480" y2="256" stroke="#E05206" stroke-width="20" stroke-linecap="round" opacity="0.55"/>
+    <line x1="408" y1="307" x2="472" y2="348" stroke="#E05206" stroke-width="20" stroke-linecap="round" opacity="0.55"/>
+  </g>
 </svg>
