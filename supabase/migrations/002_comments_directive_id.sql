@@ -1,12 +1,11 @@
 -- ════════════════════════════════════════════════════════════════════════
 --  Migration 002 — add directive_id to debrief_comments
 --
---  The application code references directive_id on debrief_comments to
---  thread responses against a specific Directive block.  This column was
---  missing from the initial schema.
+--  directive_id is a plain UUID matching the `id` field of a Directive
+--  block stored inside the debriefs.content JSONB blob.  Directives are
+--  not a separate table, so there is intentionally no FK constraint.
 --
---  ILR Stage 1 Review answers are stored inside the `content` JSONB on the
---  debriefs row (no separate table required).  The JSONB structure is:
+--  ILR Stage 1 Review answers are also stored inside content JSONB:
 --    content.ilrReview = {
 --      q1: { answer, comment },
 --      q2: { answer, comment, level, escalated },
@@ -17,8 +16,7 @@
 -- ════════════════════════════════════════════════════════════════════════
 
 alter table debrief_comments
-  add column if not exists directive_id uuid references debriefs (id) on delete cascade;
+  add column if not exists directive_id uuid;
 
--- Index for efficient per-directive comment lookups
 create index if not exists debrief_comments_directive_idx
   on debrief_comments (debrief_id, directive_id, created_at);

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Download, Undo2 } from 'lucide-react';
@@ -8,13 +9,15 @@ import { revertToDraft } from '@/lib/store';
 import { fmtDate, fmtDateTime } from '@/lib/format';
 import CommentThread from './CommentThread';
 import DirectiveThread from './DirectiveThread';
+import ConfirmModal from './ConfirmModal';
 
 export default function DebriefReview({ initial }: { initial: Debrief }) {
   const router = useRouter();
   const d = initial;
+  const [revertOpen, setRevertOpen] = useState(false);
 
-  const handleRevert = async () => {
-    if (!window.confirm('Reopen this debrief as a draft for further editing?')) return;
+  const doRevert = async () => {
+    setRevertOpen(false);
     await revertToDraft(d.id);
     router.push(`/debrief/${d.id}`);
     router.refresh();
@@ -29,13 +32,24 @@ export default function DebriefReview({ initial }: { initial: Debrief }) {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-6">
+      <ConfirmModal
+        open={revertOpen}
+        title="Reopen as draft?"
+        message="This will move the debrief back to draft status. Recipients will no longer be able to post responses until it is published again."
+        confirmLabel="Reopen"
+        cancelLabel="Cancel"
+        variant="primary"
+        onConfirm={doRevert}
+        onCancel={() => setRevertOpen(false)}
+      />
+
       {/* Controls (hidden in print) */}
       <div className="no-print mb-5 flex items-center justify-between">
         <Link href="/" className="btn btn-ghost">
           <ArrowLeft size={14} /> Dashboard
         </Link>
         <div className="flex items-center gap-3">
-          <button className="btn btn-ghost" onClick={handleRevert}>
+          <button className="btn btn-ghost" onClick={() => setRevertOpen(true)}>
             <Undo2 size={13} /> Reopen as draft
           </button>
           <button className="btn btn-primary" onClick={() => window.print()}>

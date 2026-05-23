@@ -9,9 +9,12 @@ import RealitySection from './sections/RealitySection';
 import ActionsInactionsSection from './sections/ActionsInactionsSection';
 import DirectivesSection from './sections/DirectivesSection';
 import IlrReviewSection from './sections/IlrReviewSection';
+import ConfirmModal from './ConfirmModal';
 import { Debrief, Point, Directive, IlrReview, emptyIlrReview } from '@/lib/types';
 import { updateDebrief, publishDebrief, deleteDebrief } from '@/lib/store';
 import { fmtRelative } from '@/lib/format';
+
+type ModalState = 'none' | 'publish' | 'delete';
 
 export default function DebriefEditor({ initial }: { initial: Debrief }) {
   const router = useRouter();
@@ -20,6 +23,7 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
   const [savedAt, setSavedAt] = useState<string | null>(initial.updated_at);
   const [publishing, setPublishing] = useState(false);
   const [published, setPublished] = useState(false);
+  const [modal, setModal] = useState<ModalState>('none');
   const dirty = useRef(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -61,9 +65,8 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
   const setIlrReview = (ilrReview: IlrReview) =>
     patch({ content: { ...d.content, ilrReview } });
 
-  const handlePublish = async () => {
-    if (!window.confirm('Publish this debrief? It will move to the published section for review.'))
-      return;
+  const doPublish = async () => {
+    setModal('none');
     setPublishing(true);
     await updateDebrief(d.id, {
       ref: d.ref, title: d.title, incident_date: d.incident_date, incident_time: d.incident_time,
@@ -77,8 +80,8 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
     setTimeout(() => router.push('/'), 2500);
   };
 
-  const handleDelete = async () => {
-    if (!window.confirm('Delete this draft permanently? This cannot be undone.')) return;
+  const doDelete = async () => {
+    setModal('none');
     await deleteDebrief(d.id);
     router.push('/');
   };
@@ -102,6 +105,28 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-6">
+      {/* Confirm modals */}
+      <ConfirmModal
+        open={modal === 'publish'}
+        title="Publish debrief?"
+        message="This will move the debrief to the published section where recipients can view it and post responses to directives."
+        confirmLabel="Publish"
+        cancelLabel="Cancel"
+        variant="primary"
+        onConfirm={doPublish}
+        onCancel={() => setModal('none')}
+      />
+      <ConfirmModal
+        open={modal === 'delete'}
+        title="Delete draft permanently?"
+        message="This action cannot be undone. All content in this draft will be lost."
+        confirmLabel="Delete"
+        cancelLabel="Keep draft"
+        variant="danger"
+        onConfirm={doDelete}
+        onCancel={() => setModal('none')}
+      />
+
       {/* Top bar */}
       <div className="no-print mb-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -122,10 +147,10 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
               </span>
             )}
           </span>
-          <button className="btn btn-ghost btn-danger" onClick={handleDelete}>
+          <button className="btn btn-ghost btn-danger" onClick={() => setModal('delete')}>
             <Trash2 size={13} /> Delete
           </button>
-          <button className="btn btn-primary" onClick={handlePublish} disabled={publishing}>
+          <button className="btn btn-primary" onClick={() => setModal('publish')} disabled={publishing}>
             {publishing ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
             Publish
           </button>
@@ -154,10 +179,7 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
         </div>
       </div>
 
-      <RealitySection
-        value={d}
-        onChange={patch}
-      />
+      <RealitySection value={d} onChange={patch} />
       <ActionsInactionsSection
         actions={d.content.actions}
         inactions={d.content.inactions}
@@ -169,7 +191,6 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
         value={d.content.ilrReview ?? emptyIlrReview()}
         onChange={setIlrReview}
       />
-
     </div>
   );
 }

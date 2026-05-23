@@ -2,6 +2,7 @@
 
 import { Check, X } from 'lucide-react';
 import SectionCard from '../SectionCard';
+import TimePicker from '../TimePicker';
 import { IlrAnswer, IlrReview, emptyIlrReview } from '@/lib/types';
 
 // ─── yes/no toggle ──────────────────────────────────────────────────────────
@@ -301,11 +302,9 @@ export default function IlrReviewSection({
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-2">
                 <span className="label-micro">Time held</span>
-                <input
-                  className="input w-28 input-mono"
+                <TimePicker
                   value={review.q4.huddleTime ?? ''}
-                  onChange={(e) => patch('q4', { huddleTime: e.target.value })}
-                  placeholder="HH:MM"
+                  onChange={(v) => patch('q4', { huddleTime: v })}
                 />
               </div>
               <SubToggle
