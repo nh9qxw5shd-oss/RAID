@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Send, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Send, MessageCircle, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { Comment } from '@/lib/types';
 import { listComments, addComment } from '@/lib/store';
 import { fmtDateTime } from '@/lib/format';
@@ -23,6 +23,7 @@ export default function DirectiveThread({
   const [org, setOrg] = useState('');
   const [body, setBody] = useState('');
   const [posting, setPosting] = useState(false);
+  const [postError, setPostError] = useState<string | null>(null);
 
   useEffect(() => {
     listComments(debriefId, directiveId)
@@ -33,11 +34,17 @@ export default function DirectiveThread({
   const submit = async () => {
     if (!body.trim()) return;
     setPosting(true);
-    const c = await addComment(debriefId, author.trim(), org.trim(), body.trim(), directiveId);
-    setComments((prev) => [...prev, c]);
-    setBody('');
-    setPosting(false);
-    notifyCommentAdded(debriefTitle, true);
+    setPostError(null);
+    try {
+      const c = await addComment(debriefId, author.trim(), org.trim(), body.trim(), directiveId);
+      setComments((prev) => [...prev, c]);
+      setBody('');
+      notifyCommentAdded(debriefTitle, true);
+    } catch (err) {
+      setPostError(err instanceof Error ? err.message : 'Failed to post — please try again.');
+    } finally {
+      setPosting(false);
+    }
   };
 
   const count = loading ? null : comments.length;
@@ -107,13 +114,17 @@ export default function DirectiveThread({
               onChange={(e) => setBody(e.target.value)}
               placeholder="Response to this directive…"
             />
+            {postError && (
+              <p className="mb-1 font-mono text-[12px] text-[var(--nr-red)]">{postError}</p>
+            )}
             <div className="flex justify-end">
               <button
                 className="btn btn-primary"
                 onClick={submit}
                 disabled={posting || !body.trim()}
               >
-                <Send size={13} /> Post response
+                {posting ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
+                Post response
               </button>
             </div>
           </div>

@@ -7,6 +7,7 @@ import {
   Comment,
   DebriefContent,
   emptyContent,
+  emptyIlrReview,
 } from './types';
 
 // ════════════════════════════════════════════════════════════════════════
@@ -41,6 +42,7 @@ function normaliseContent(c: unknown): DebriefContent {
     actions: Array.isArray(obj.actions) ? obj.actions : [],
     inactions: Array.isArray(obj.inactions) ? obj.inactions : [],
     directives: Array.isArray(obj.directives) ? obj.directives : [],
+    ilrReview: obj.ilrReview ?? emptyIlrReview(),
   };
 }
 
@@ -195,6 +197,23 @@ export async function deleteDebrief(id: string): Promise<void> {
 // ════════════════════════════════════════════════════════════════════════
 //  Comments
 // ════════════════════════════════════════════════════════════════════════
+/** Fetch every comment on a debrief regardless of directive_id — used for PDF rendering. */
+export async function listAllComments(debriefId: string): Promise<Comment[]> {
+  const sb = getSupabase();
+  if (sb) {
+    const { data, error } = await sb
+      .from('debrief_comments')
+      .select('*')
+      .eq('debrief_id', debriefId)
+      .order('created_at', { ascending: true });
+    if (error) throw error;
+    return (data || []) as Comment[];
+  }
+  return lsRead<Comment>(LS_COMMENTS)
+    .filter((c) => c.debrief_id === debriefId)
+    .sort((a, b) => a.created_at.localeCompare(b.created_at));
+}
+
 export async function listComments(debriefId: string, directiveId?: string): Promise<Comment[]> {
   const sb = getSupabase();
   if (sb) {
