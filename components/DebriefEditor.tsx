@@ -8,7 +8,8 @@ import { notifyDebriefPublished } from '@/lib/notifications';
 import RealitySection from './sections/RealitySection';
 import ActionsInactionsSection from './sections/ActionsInactionsSection';
 import DirectivesSection from './sections/DirectivesSection';
-import { Debrief, Point, Directive } from '@/lib/types';
+import IlrReviewSection from './sections/IlrReviewSection';
+import { Debrief, Point, Directive, IlrReview, emptyIlrReview } from '@/lib/types';
 import { updateDebrief, publishDebrief, deleteDebrief } from '@/lib/store';
 import { fmtRelative } from '@/lib/format';
 
@@ -57,6 +58,8 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
     patch({ content: { ...d.content, [key]: rows } });
   const setDirectives = (rows: Directive[]) =>
     patch({ content: { ...d.content, directives: rows } });
+  const setIlrReview = (ilrReview: IlrReview) =>
+    patch({ content: { ...d.content, ilrReview } });
 
   const handlePublish = async () => {
     if (!window.confirm('Publish this debrief? It will move to the published section for review.'))
@@ -162,6 +165,10 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
         onInactionsChange={(rows) => setContent('inactions', rows)}
       />
       <DirectivesSection blocks={d.content.directives} onChange={setDirectives} />
+      <IlrReviewSection
+        value={d.content.ilrReview ?? emptyIlrReview()}
+        onChange={setIlrReview}
+      />
 
     </div>
   );

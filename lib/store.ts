@@ -7,6 +7,7 @@ import {
   Comment,
   DebriefContent,
   emptyContent,
+  emptyIlrReview,
 } from './types';
 
 // ════════════════════════════════════════════════════════════════════════
@@ -41,6 +42,7 @@ function normaliseContent(c: unknown): DebriefContent {
     actions: Array.isArray(obj.actions) ? obj.actions : [],
     inactions: Array.isArray(obj.inactions) ? obj.inactions : [],
     directives: Array.isArray(obj.directives) ? obj.directives : [],
+    ilrReview: obj.ilrReview ?? emptyIlrReview(),
   };
 }
 

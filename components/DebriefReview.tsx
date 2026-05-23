@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Download, Undo2 } from 'lucide-react';
-import { Debrief } from '@/lib/types';
+import { Debrief, IlrAnswer, IlrReview } from '@/lib/types';
 import { revertToDraft } from '@/lib/store';
 import { fmtDate, fmtDateTime } from '@/lib/format';
 import CommentThread from './CommentThread';
@@ -129,6 +129,9 @@ export default function DebriefReview({ initial }: { initial: Debrief }) {
           )}
         </Block>
 
+        {/* ILR Stage 1 Review */}
+        {d.content.ilrReview && <IlrReviewBlock review={d.content.ilrReview} />}
+
         <footer className="rd-rule rd-muted mt-6 border-t border-[var(--line)] pt-4 font-mono text-[12px] text-[var(--ink-500)]">
           RAID Incident Debrief · Generated {fmtDateTime(new Date().toISOString())}
         </footer>
@@ -166,6 +169,94 @@ function Block({
       </div>
       <div className="pl-8.5" style={{ paddingLeft: '2.125rem' }}>
         {children}
+      </div>
+    </section>
+  );
+}
+
+// ─── ILR review block (rendered inside the printed report) ──────────────────
+
+const ILR_QUESTIONS: Array<{ key: keyof IlrReview; label: string }> = [
+  { key: 'q1', label: 'Did you follow Disruption Management principles?' },
+  { key: 'q2', label: 'Did you classify the Level of Disruption?' },
+  { key: 'q3', label: 'Did you agree Service Containment via TRC within 10 minutes?' },
+  { key: 'q4', label: 'Did you hold a first Huddle?' },
+  { key: 'q5', label: 'Were there any communications concerns during the incident?' },
+];
+
+function IlrAnswerPill({ answer }: { answer: IlrAnswer['answer'] }) {
+  if (!answer) return <span className="text-[var(--ink-500)] font-mono text-[12px]">—</span>;
+  const isYes = answer === 'yes';
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded px-2 py-0.5 font-mono text-[12px] font-medium uppercase tracking-wide"
+      style={{
+        background: isYes ? 'rgba(39,174,96,0.12)' : 'rgba(231,76,60,0.12)',
+        border: `1px solid ${isYes ? 'rgba(39,174,96,0.4)' : 'rgba(231,76,60,0.4)'}`,
+        color: isYes ? '#4ED88B' : '#FF8077',
+      }}
+    >
+      {isYes ? '✓ Yes' : '✗ No'}
+    </span>
+  );
+}
+
+function IlrReviewBlock({ review }: { review: IlrReview }) {
+  const hasAnyAnswer = ILR_QUESTIONS.some((q) => review[q.key].answer !== null);
+  if (!hasAnyAnswer) return null;
+
+  return (
+    <section className="mb-6">
+      <div className="mb-3 flex items-center gap-2.5">
+        <span
+          className="rd-accent flex h-6 items-center justify-center rounded px-1.5 font-mono text-[11px] font-medium"
+          style={{ background: 'var(--nr-orange-glow)', color: 'var(--nr-orange)' }}
+        >
+          ILR
+        </span>
+        <h2 className="text-[16px] font-semibold text-[var(--ink-100)]">Stage 1 Review</h2>
+      </div>
+      <div style={{ paddingLeft: '2.125rem' }}>
+      <div className="space-y-3">
+        {ILR_QUESTIONS.map(({ key, label }, i) => {
+          const a = review[key];
+          return (
+            <div key={key} className="border-b border-[var(--line)] pb-3 last:border-0 last:pb-0">
+              <div className="flex items-start justify-between gap-4">
+                <span className="text-[14px] leading-snug text-[var(--ink-300)]">
+                  <span className="mr-2 font-mono text-[12px] text-[var(--nr-orange)]">Q{i + 1}</span>
+                  {label}
+                </span>
+                <IlrAnswerPill answer={a.answer} />
+              </div>
+              {/* Extra detail (Q2) */}
+              {key === 'q2' && a.answer === 'yes' && (a.level || a.escalated) && (
+                <div className="mt-1.5 flex flex-wrap gap-4 pl-6 font-mono text-[12px] text-[var(--ink-400)]">
+                  {a.level && <span>Level: <span className="text-[var(--ink-200)]">{a.level}</span></span>}
+                  {a.escalated && (
+                    <span>Escalated: <span className="text-[var(--ink-200)]">{a.escalated === 'yes' ? 'Yes' : 'No'}</span></span>
+                  )}
+                </div>
+              )}
+              {/* Extra detail (Q4) */}
+              {key === 'q4' && a.answer === 'yes' && (a.huddleTime || a.furtherHuddles) && (
+                <div className="mt-1.5 flex flex-wrap gap-4 pl-6 font-mono text-[12px] text-[var(--ink-400)]">
+                  {a.huddleTime && <span>First huddle: <span className="text-[var(--ink-200)]">{a.huddleTime}</span></span>}
+                  {a.furtherHuddles && (
+                    <span>Further huddles: <span className="text-[var(--ink-200)]">{a.furtherHuddles === 'yes' ? 'Yes' : 'No'}</span></span>
+                  )}
+                </div>
+              )}
+              {/* Comment */}
+              {a.comment && (
+                <p className="mt-1.5 pl-6 text-[13px] italic leading-relaxed text-[var(--ink-400)]">
+                  {a.comment}
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
       </div>
     </section>
   );
