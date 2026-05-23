@@ -3,16 +3,12 @@
 export type DebriefStatus = 'draft' | 'published';
 
 export const INCIDENT_TYPES = [
-  'Service Disruption',
-  'Possession Overrun',
-  'Unplanned Obstruction',
   'Infrastructure Fault',
-  'Asset Failure',
-  'Signalling Failure',
-  'Delay Attribution',
-  'Resource Availability',
-  'Communications Failure',
+  'Possession Overrun',
+  'Weather Event',
   'Safety Event',
+  'Train Fault',
+  'Irregularity',
   'Other',
 ] as const;
 
@@ -65,6 +61,7 @@ export interface Debrief {
 export interface Comment {
   id: string;
   debrief_id: string;
+  directive_id?: string;
   author: string;
   organisation: string;
   body: string;

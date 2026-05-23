@@ -195,19 +195,28 @@ export async function deleteDebrief(id: string): Promise<void> {
 // ════════════════════════════════════════════════════════════════════════
 //  Comments
 // ════════════════════════════════════════════════════════════════════════
-export async function listComments(debriefId: string): Promise<Comment[]> {
+export async function listComments(debriefId: string, directiveId?: string): Promise<Comment[]> {
   const sb = getSupabase();
   if (sb) {
-    const { data, error } = await sb
+    let q = sb
       .from('debrief_comments')
       .select('*')
       .eq('debrief_id', debriefId)
       .order('created_at', { ascending: true });
+    if (directiveId) {
+      q = q.eq('directive_id', directiveId);
+    } else {
+      q = q.is('directive_id', null);
+    }
+    const { data, error } = await q;
     if (error) throw error;
     return (data || []) as Comment[];
   }
   return lsRead<Comment>(LS_COMMENTS)
-    .filter((c) => c.debrief_id === debriefId)
+    .filter((c) => {
+      if (c.debrief_id !== debriefId) return false;
+      return directiveId ? c.directive_id === directiveId : !c.directive_id;
+    })
     .sort((a, b) => a.created_at.localeCompare(b.created_at));
 }
 
@@ -216,10 +225,12 @@ export async function addComment(
   author: string,
   organisation: string,
   body: string,
+  directiveId?: string,
 ): Promise<Comment> {
   const comment: Comment = {
     id: uid(),
     debrief_id: debriefId,
+    ...(directiveId ? { directive_id: directiveId } : {}),
     author: author || 'Anonymous',
     organisation: organisation || '',
     body,
@@ -232,6 +243,7 @@ export async function addComment(
       .from('debrief_comments')
       .insert({
         debrief_id: debriefId,
+        ...(directiveId ? { directive_id: directiveId } : {}),
         author: comment.author,
         organisation: comment.organisation,
         body: comment.body,

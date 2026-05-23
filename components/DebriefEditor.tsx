@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Check, Send, Trash2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Check, CheckCircle2, Send, Trash2, Loader2 } from 'lucide-react';
+import { notifyDebriefPublished } from '@/lib/notifications';
 import RealitySection from './sections/RealitySection';
 import ActionsInactionsSection from './sections/ActionsInactionsSection';
 import DirectivesSection from './sections/DirectivesSection';
@@ -17,6 +18,7 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<string | null>(initial.updated_at);
   const [publishing, setPublishing] = useState(false);
+  const [published, setPublished] = useState(false);
   const dirty = useRef(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -66,7 +68,10 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
       content: d.content, author: d.author, organisation: d.organisation,
     });
     await publishDebrief(d.id);
-    router.push(`/debrief/${d.id}`);
+    setPublishing(false);
+    setPublished(true);
+    notifyDebriefPublished(d.title, d.id);
+    setTimeout(() => router.push('/'), 2500);
   };
 
   const handleDelete = async () => {
@@ -75,15 +80,35 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
     router.push('/');
   };
 
+  if (published) {
+    return (
+      <div className="flex min-h-[70vh] flex-col items-center justify-center gap-5 px-6">
+        <div
+          className="flex h-16 w-16 items-center justify-center rounded-full"
+          style={{ background: 'rgba(39,174,96,0.12)', border: '1px solid rgba(39,174,96,0.35)' }}
+        >
+          <CheckCircle2 size={32} className="text-[var(--nr-green)]" />
+        </div>
+        <div className="text-center">
+          <h2 className="serif mb-2 text-[28px] text-[var(--ink-100)]">Debrief Published</h2>
+          <p className="font-mono text-[13px] text-[var(--ink-500)]">Returning to dashboard…</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-5xl px-6 py-6">
       {/* Top bar */}
       <div className="no-print mb-5 flex items-center justify-between">
-        <Link href="/" className="btn btn-ghost">
-          <ArrowLeft size={14} /> Dashboard
-        </Link>
         <div className="flex items-center gap-3">
-          <span className="font-mono text-[11px] text-[var(--ink-500)]">
+          <Link href="/" className="btn btn-ghost">
+            <ArrowLeft size={14} /> Dashboard
+          </Link>
+          <span className="font-mono text-[12px] text-[var(--ink-500)]">progress is saved automatically</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-[13px] text-[var(--ink-500)]">
             {saving ? (
               <span className="inline-flex items-center gap-1.5">
                 <Loader2 size={12} className="animate-spin" /> Saving…
@@ -138,12 +163,6 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
       />
       <DirectivesSection blocks={d.content.directives} onChange={setDirectives} />
 
-      <div className="no-print mt-5 flex justify-end gap-3">
-        <button className="btn btn-primary" onClick={handlePublish} disabled={publishing}>
-          {publishing ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
-          Publish debrief
-        </button>
-      </div>
     </div>
   );
 }

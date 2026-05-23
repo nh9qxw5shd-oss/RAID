@@ -77,7 +77,7 @@ export default function DirectivesSection({
 
           {block.questions.map((q, idx) => (
             <div key={q.id} className="mb-2 flex items-center gap-2">
-              <span className="w-7 shrink-0 font-mono text-[11px] text-[var(--ink-400)]">
+              <span className="w-7 shrink-0 font-mono text-[13px] text-[var(--ink-400)]">
                 Q{idx + 1}
               </span>
               <input

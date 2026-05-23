@@ -38,7 +38,7 @@ export default function DashboardPage() {
         <div className="mb-8 flex items-end justify-between">
           <div>
             <p className="label-micro mb-1">Reality · Actions · Inactions · Directives</p>
-            <h1 className="serif text-[32px] leading-none text-[var(--ink-100)]">
+            <h1 className="serif text-[36px] leading-none text-[var(--ink-100)]">
               Incident Debriefs
             </h1>
           </div>
@@ -49,7 +49,7 @@ export default function DashboardPage() {
         </div>
 
         {loading ? (
-          <p className="font-mono text-[12px] text-[var(--ink-500)]">Loading debriefs…</p>
+          <p className="font-mono text-[14px] text-[var(--ink-500)]">Loading debriefs…</p>
         ) : (
           <div className="space-y-10">
             <Group title="Open" count={drafts.length}>
@@ -79,7 +79,7 @@ function Group({ title, count, children }: { title: string; count: number; child
     <section>
       <div className="mb-3 flex items-center gap-3">
         <h2 className="label-micro !text-[var(--ink-300)]">{title}</h2>
-        <span className="font-mono text-[11px] text-[var(--ink-500)]">{count}</span>
+        <span className="font-mono text-[13px] text-[var(--ink-500)]">{count}</span>
         <div className="h-px flex-1 bg-[var(--line)]" />
       </div>
       <div className="space-y-2.5">{children}</div>
@@ -89,7 +89,7 @@ function Group({ title, count, children }: { title: string; count: number; child
 
 function Empty({ label }: { label: string }) {
   return (
-    <div className="rounded border border-dashed border-[var(--line)] px-5 py-8 text-center font-mono text-[11px] text-[var(--ink-500)]">
+    <div className="rounded border border-dashed border-[var(--line)] px-5 py-8 text-center font-mono text-[13px] text-[var(--ink-500)]">
       {label}
     </div>
   );
@@ -103,14 +103,14 @@ function Row({ d }: { d: Debrief }) {
           <FileText size={16} className="shrink-0 text-[var(--ink-400)]" />
           <div className="min-w-0">
             <div className="flex items-center gap-2.5">
-              <span className="truncate text-[14px] font-semibold text-[var(--ink-100)]">
+              <span className="truncate text-[16px] font-semibold text-[var(--ink-100)]">
                 {d.title || 'Untitled incident'}
               </span>
               {d.ref && (
-                <span className="shrink-0 font-mono text-[10px] text-[var(--ink-500)]">{d.ref}</span>
+                <span className="shrink-0 font-mono text-[12px] text-[var(--ink-500)]">{d.ref}</span>
               )}
             </div>
-            <div className="mt-0.5 flex items-center gap-3 font-mono text-[10px] text-[var(--ink-500)]">
+            <div className="mt-0.5 flex items-center gap-3 font-mono text-[12px] text-[var(--ink-500)]">
               {d.incident_type && <span>{d.incident_type}</span>}
               {d.location && <span className="truncate">· {d.location}</span>}
               {d.incident_date && <span>· {fmtDate(d.incident_date)}</span>}
@@ -118,7 +118,7 @@ function Row({ d }: { d: Debrief }) {
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-4">
-          <span className="hidden font-mono text-[10px] text-[var(--ink-500)] sm:block">
+          <span className="hidden font-mono text-[12px] text-[var(--ink-500)] sm:block">
             {fmtRelative(d.updated_at)}
           </span>
           <StatusPill status={d.status} />

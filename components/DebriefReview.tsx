@@ -7,6 +7,7 @@ import { Debrief } from '@/lib/types';
 import { revertToDraft } from '@/lib/store';
 import { fmtDate, fmtDateTime } from '@/lib/format';
 import CommentThread from './CommentThread';
+import DirectiveThread from './DirectiveThread';
 
 export default function DebriefReview({ initial }: { initial: Debrief }) {
   const router = useRouter();
@@ -47,7 +48,7 @@ export default function DebriefReview({ initial }: { initial: Debrief }) {
       <article className="report-document card tick-corners p-8">
         <header className="rd-rule mb-6 border-b border-[var(--line)] pb-5">
           <div className="mb-2 flex items-center gap-3">
-            <span className="rd-accent font-mono text-[13px] font-medium uppercase tracking-[0.16em] text-[var(--nr-orange)]">
+            <span className="rd-accent font-mono text-[15px] font-medium uppercase tracking-[0.16em] text-[var(--nr-orange)]">
               RAID Incident Debrief
             </span>
             <span className="pill pill-published">Published</span>
@@ -55,16 +56,16 @@ export default function DebriefReview({ initial }: { initial: Debrief }) {
           <h1 className="serif mb-2 text-[28px] leading-tight text-[var(--ink-100)]">
             {d.title || 'Untitled incident'}
           </h1>
-          <div className="rd-muted grid grid-cols-2 gap-x-8 gap-y-1 font-mono text-[11px] text-[var(--ink-400)] sm:grid-cols-4">
+          <div className="rd-muted grid grid-cols-2 gap-x-8 gap-y-1 font-mono text-[13px] text-[var(--ink-400)] sm:grid-cols-4">
             {meta.map(([k, v]) => (
               <div key={k}>
-                <span className="block text-[9px] uppercase tracking-[0.16em] text-[var(--ink-500)]">{k}</span>
+                <span className="block text-[11px] uppercase tracking-[0.16em] text-[var(--ink-500)]">{k}</span>
                 <span className="text-[var(--ink-300)]">{v}</span>
               </div>
             ))}
           </div>
           {(d.author || d.organisation) && (
-            <div className="rd-muted mt-3 font-mono text-[10px] text-[var(--ink-500)]">
+            <div className="rd-muted mt-3 font-mono text-[12px] text-[var(--ink-500)]">
               Lead: {d.author || '—'}
               {d.organisation && ` · ${d.organisation}`}
               {d.published_at && ` · Published ${fmtDateTime(d.published_at)}`}
@@ -75,7 +76,7 @@ export default function DebriefReview({ initial }: { initial: Debrief }) {
         {/* R */}
         {d.summary && (
           <Block letter="R" title="Reality">
-            <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-[var(--ink-300)]">
+            <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--ink-300)]">
               {d.summary}
             </p>
           </Block>
@@ -94,43 +95,48 @@ export default function DebriefReview({ initial }: { initial: Debrief }) {
         {/* D */}
         <Block letter="D" title="Directives">
           {d.content.directives.filter((b) => b.to || b.questions.some((q) => q.text)).length === 0 ? (
-            <p className="rd-muted text-[12px] text-[var(--ink-500)]">No directives issued.</p>
+            <p className="rd-muted text-[14px] text-[var(--ink-500)]">No directives issued.</p>
           ) : (
             <div className="space-y-4">
               {d.content.directives
                 .filter((b) => b.to || b.questions.some((q) => q.text))
                 .map((b) => (
                   <div key={b.id} className="rd-rule border-l-2 border-[var(--line-hi)] pl-4">
-                    <div className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--ink-400)]">
+                    <div className="mb-1.5 font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--ink-400)]">
                       To: <span className="rd-accent text-[var(--nr-orange)]">{b.to || '—'}</span>
                     </div>
                     <ol className="mb-2 space-y-1">
                       {b.questions
                         .filter((q) => q.text)
                         .map((q, i) => (
-                          <li key={q.id} className="flex gap-2 text-[13px] text-[var(--ink-300)]">
-                            <span className="font-mono text-[11px] text-[var(--ink-500)]">Q{i + 1}</span>
+                          <li key={q.id} className="flex gap-2 text-[15px] text-[var(--ink-300)]">
+                            <span className="font-mono text-[13px] text-[var(--ink-500)]">Q{i + 1}</span>
                             {q.text}
                           </li>
                         ))}
                     </ol>
-                    <div className="rd-muted font-mono text-[10px] text-[var(--ink-500)]">
+                    <div className="rd-muted font-mono text-[12px] text-[var(--ink-500)]">
                       ⟶ {b.directive}
                     </div>
+                    <DirectiveThread
+                      debriefId={d.id}
+                      directiveId={b.id}
+                      debriefTitle={d.title}
+                    />
                   </div>
                 ))}
             </div>
           )}
         </Block>
 
-        <footer className="rd-rule rd-muted mt-6 border-t border-[var(--line)] pt-4 font-mono text-[10px] text-[var(--ink-500)]">
+        <footer className="rd-rule rd-muted mt-6 border-t border-[var(--line)] pt-4 font-mono text-[12px] text-[var(--ink-500)]">
           RAID Incident Debrief · Generated {fmtDateTime(new Date().toISOString())}
         </footer>
       </article>
 
       {/* Commentary (screen only) */}
       <div className="no-print">
-        <CommentThread debriefId={d.id} />
+        <CommentThread debriefId={d.id} debriefTitle={d.title} />
       </div>
     </div>
   );
@@ -151,12 +157,12 @@ function Block({
     <section className="mb-6">
       <div className="mb-3 flex items-center gap-2.5">
         <span
-          className="rd-accent flex h-6 w-6 items-center justify-center rounded font-mono text-[12px] font-medium"
+          className="rd-accent flex h-6 w-6 items-center justify-center rounded font-mono text-[14px] font-medium"
           style={{ background: 'var(--nr-orange-glow)', color: accent }}
         >
           {letter}
         </span>
-        <h2 className="text-[14px] font-semibold text-[var(--ink-100)]">{title}</h2>
+        <h2 className="text-[16px] font-semibold text-[var(--ink-100)]">{title}</h2>
       </div>
       <div className="pl-8.5" style={{ paddingLeft: '2.125rem' }}>
         {children}
@@ -168,11 +174,11 @@ function Block({
 function PointList({ items, empty }: { items: string[]; empty: string }) {
   const filtered = items.filter((t) => t.trim());
   if (filtered.length === 0)
-    return <p className="rd-muted text-[12px] text-[var(--ink-500)]">{empty}</p>;
+    return <p className="rd-muted text-[14px] text-[var(--ink-500)]">{empty}</p>;
   return (
     <ul className="space-y-1.5">
       {filtered.map((t, i) => (
-        <li key={i} className="flex gap-2.5 text-[13px] leading-relaxed text-[var(--ink-300)]">
+        <li key={i} className="flex gap-2.5 text-[15px] leading-relaxed text-[var(--ink-300)]">
           <span className="rd-accent mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[var(--nr-orange)]" />
           {t}
         </li>

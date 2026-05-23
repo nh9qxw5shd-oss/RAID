@@ -23,11 +23,11 @@ function Column({
   return (
     <div className="rounded border border-[var(--line)] bg-[var(--bg-panel)] p-4">
       <div
-        className="mb-3 flex items-center gap-2 border-b border-[var(--line)] pb-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.16em]"
+        className="mb-3 flex items-center gap-2 border-b border-[var(--line)] pb-2.5 font-mono text-[12px] font-medium uppercase tracking-[0.16em]"
         style={{ color: isAction ? 'var(--nr-green)' : 'var(--nr-red)' }}
       >
         {isAction ? 'A — Actions' : 'I — Inactions'}
-        <span className="font-sans text-[10px] normal-case tracking-normal text-[var(--ink-500)]">
+        <span className="font-sans text-[12px] normal-case tracking-normal text-[var(--ink-500)]">
           {isAction ? 'effective actions & good practice' : 'gaps, omissions & improvement areas'}
         </span>
       </div>

@@ -32,14 +32,14 @@ export default function DebriefPage() {
     <>
       <Header />
       {state === 'loading' && (
-        <div className="flex items-center justify-center py-32 font-mono text-[12px] text-[var(--ink-500)]">
+        <div className="flex items-center justify-center py-32 font-mono text-[14px] text-[var(--ink-500)]">
           <Loader2 size={16} className="mr-2 animate-spin" /> Loading…
         </div>
       )}
       {state === 'missing' && (
         <div className="mx-auto max-w-2xl px-6 py-32 text-center">
-          <h1 className="serif mb-3 text-[24px] text-[var(--ink-100)]">Debrief not found</h1>
-          <p className="mb-6 text-[13px] text-[var(--ink-400)]">
+          <h1 className="serif mb-3 text-[28px] text-[var(--ink-100)]">Debrief not found</h1>
+          <p className="mb-6 text-[15px] text-[var(--ink-400)]">
             This debrief may have been deleted, or exists only in another browser&apos;s local storage.
           </p>
           <Link href="/" className="btn btn-ghost">
