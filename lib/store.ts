@@ -84,6 +84,29 @@ export async function listDebriefs(): Promise<Debrief[]> {
   );
 }
 
+/**
+ * Published debriefs only — backs the public "Respond" portal so that
+ * stakeholders never see drafts or the wider system. Filtered server-side
+ * when Supabase is configured.
+ */
+export async function listPublishedDebriefs(): Promise<Debrief[]> {
+  const sb = getSupabase();
+  if (sb) {
+    const { data, error } = await sb
+      .from('debriefs')
+      .select('*')
+      .eq('status', 'published')
+      .order('published_at', { ascending: false });
+    if (error) throw error;
+    return (data || []).map(hydrate);
+  }
+  return lsRead<Debrief>(LS_DEBRIEFS)
+    .filter((d) => d.status === 'published')
+    .sort((a, b) =>
+      (b.published_at || b.updated_at).localeCompare(a.published_at || a.updated_at),
+    );
+}
+
 export async function getDebrief(id: string): Promise<Debrief | null> {
   const sb = getSupabase();
   if (sb) {

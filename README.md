@@ -18,7 +18,23 @@ design language.
 4. **Review** — published debriefs render as a professional report with:
    - **Download PDF** (browser print-to-PDF against a clean document layout)
    - **Commentary** — threaded onwards comments from any stakeholder.
+   - **Respond QR code** — printed on the report so anyone holding the
+     paper/PDF can scan straight through to the public reply portal.
 5. **Reopen as draft** if further editing is needed.
+
+### Respond portal (`/respond`)
+
+A deliberately minimal, public-facing surface for stakeholders who should be
+able to reply **without** access to the wider system (no dashboard, editor, or
+drafts). It lets them:
+
+- **Select** from a list of published incidents (`/respond`), or jump straight
+  to one by scanning the QR code on a report (`/respond/<id>`).
+- **Answer a directive question** against the specific directive it relates to.
+- **Add general commentary** on the incident.
+
+Responses flow into the same comment store, so they appear in the report's
+Commentary thread and in the exported PDF alongside everything else.
 
 ---
 
@@ -56,6 +72,13 @@ badge appears in the header. Data stays on that one browser.
 > policies (anon can read/write) so the tool works out of the box. **Before
 > exposing this to external stakeholders, add Supabase Auth and tighten the RLS
 > policies** to authenticated roles. See the comment block in the migration.
+>
+> The `/respond` portal is a *UI-level* restriction — it intentionally hides the
+> control-side app — but it is not a security boundary on its own. With the
+> permissive anon policies above, the underlying data is still reachable via the
+> API. Pair it with tightened RLS (e.g. allow `select` only on published
+> debriefs, and `insert` only on `debrief_comments`) before relying on it
+> externally.
 
 ---
 
@@ -75,11 +98,16 @@ badge appears in the header. Data stays on that one browser.
 app/
   page.tsx                 Dashboard (Open / Published)
   debrief/[id]/page.tsx    Editor (draft) or Review (published)
+  respond/                 Public stakeholder reply portal
+    layout.tsx             Minimal header (no control-side navigation)
+    page.tsx               Pick a published incident
+    [id]/page.tsx          Read-only context + reply / directive answer
   layout.tsx, globals.css  Shell + Insight design tokens
 components/
   Header, StatusPill, TimePicker, SectionCard
   DebriefEditor            Autosaving RAID form
   DebriefReview            Published report + PDF export
+  RespondQr                QR code linking a report to its respond page
   CommentThread            Onwards commentary
   sections/                Reality · Actions/Inactions · Directives
 lib/
