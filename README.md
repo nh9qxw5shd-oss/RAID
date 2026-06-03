@@ -32,9 +32,14 @@ drafts). It lets them:
   to one by scanning the QR code on a report (`/respond/<id>`).
 - **Answer a directive question** against the specific directive it relates to.
 - **Add general commentary** on the incident.
+- **Download PDF** — regenerate the report themselves, including any responses
+  just posted, without going back to control for an updated copy.
 
 Responses flow into the same comment store, so they appear in the report's
-Commentary thread and in the exported PDF alongside everything else.
+Commentary thread and in the exported PDF alongside everything else. The
+control-side review page and the portal share one `ReportDocument` component,
+so both produce an identical PDF, and newly posted responses are folded into
+the printable copy without a page reload.
 
 ---
 
@@ -106,7 +111,8 @@ app/
 components/
   Header, StatusPill, TimePicker, SectionCard
   DebriefEditor            Autosaving RAID form
-  DebriefReview            Published report + PDF export
+  DebriefReview            Published report + PDF export (control side)
+  ReportDocument           Shared printable report (control + respond portal)
   RespondQr                QR code linking a report to its respond page
   CommentThread            Onwards commentary
   sections/                Reality · Actions/Inactions · Directives

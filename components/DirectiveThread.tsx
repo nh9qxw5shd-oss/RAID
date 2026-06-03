@@ -11,10 +11,12 @@ export default function DirectiveThread({
   debriefId,
   directiveId,
   debriefTitle,
+  onCommentAdded,
 }: {
   debriefId: string;
   directiveId: string;
   debriefTitle: string;
+  onCommentAdded?: (c: Comment) => void;
 }) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +40,7 @@ export default function DirectiveThread({
     try {
       const c = await addComment(debriefId, author.trim(), org.trim(), body.trim(), directiveId);
       setComments((prev) => [...prev, c]);
+      onCommentAdded?.(c);
       setBody('');
       notifyCommentAdded(debriefTitle, true);
     } catch (err) {

@@ -3,18 +3,21 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2 } from 'lucide-react';
-import { Debrief } from '@/lib/types';
-import { getDebrief } from '@/lib/store';
-import { fmtDate } from '@/lib/format';
+import { ArrowLeft, Download, Loader2 } from 'lucide-react';
+import { Comment, Debrief } from '@/lib/types';
+import { getDebrief, listAllComments } from '@/lib/store';
 import CommentThread from '@/components/CommentThread';
-import DirectiveThread from '@/components/DirectiveThread';
+import ReportDocument from '@/components/ReportDocument';
 
 export default function RespondDebriefPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
   const [debrief, setDebrief] = useState<Debrief | null>(null);
   const [state, setState] = useState<'loading' | 'ready' | 'missing'>('loading');
+
+  // Comments back the print-only blocks; responses posted here are appended so
+  // a freshly generated PDF always includes the latest commentary.
+  const [allComments, setAllComments] = useState<Comment[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -23,11 +26,14 @@ export default function RespondDebriefPage() {
       if (d && d.status === 'published') {
         setDebrief(d);
         setState('ready');
+        listAllComments(d.id).then(setAllComments).catch(() => {/* best-effort */});
       } else {
         setState('missing');
       }
     });
   }, [id]);
+
+  const handleCommentAdded = (c: Comment) => setAllComments((prev) => [...prev, c]);
 
   if (state === 'loading') {
     return (
@@ -55,112 +61,32 @@ export default function RespondDebriefPage() {
   }
 
   const d = debrief;
-  const directives = d.content.directives.filter(
-    (b) => b.to || b.questions.some((q) => q.text),
-  );
-
-  const meta = [
-    ['Ref', d.ref || '—'],
-    ['Type', d.incident_type || '—'],
-    ['Date', d.incident_date ? `${fmtDate(d.incident_date)} ${d.incident_time}` : '—'],
-    ['Location', d.location || '—'],
-  ] as const;
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-6">
-      <div className="mb-5">
+    <div className="mx-auto max-w-4xl px-6 py-6">
+      {/* Controls (hidden in print) */}
+      <div className="no-print mb-5 flex items-center justify-between">
         <Link href="/respond" className="btn btn-ghost">
           <ArrowLeft size={14} /> All incidents
         </Link>
+        <button className="btn btn-primary" onClick={() => window.print()}>
+          <Download size={14} /> Download PDF
+        </button>
       </div>
 
-      {/* Read-only context */}
-      <article className="card tick-corners p-8">
-        <header className="mb-6 border-b border-[var(--line)] pb-5">
-          <div className="mb-2 flex items-center gap-3">
-            <span className="font-mono text-[15px] font-medium uppercase tracking-[0.16em] text-[var(--nr-orange)]">
-              RAID Incident Debrief
-            </span>
-            <span className="pill pill-published">Published</span>
-          </div>
-          <h1 className="serif mb-2 text-[28px] leading-tight text-[var(--ink-100)]">
-            {d.title || 'Untitled incident'}
-          </h1>
-          <div className="grid grid-cols-2 gap-x-8 gap-y-1 font-mono text-[13px] text-[var(--ink-400)] sm:grid-cols-4">
-            {meta.map(([k, v]) => (
-              <div key={k}>
-                <span className="block text-[11px] uppercase tracking-[0.16em] text-[var(--ink-500)]">
-                  {k}
-                </span>
-                <span className="text-[var(--ink-300)]">{v}</span>
-              </div>
-            ))}
-          </div>
-        </header>
+      <p className="no-print mb-4 text-[13px] leading-relaxed text-[var(--ink-400)]">
+        Read the report below, answer a directive, or add commentary. Use{' '}
+        <span className="text-[var(--ink-200)]">Download PDF</span> at any time to
+        generate an up-to-date copy including the latest responses.
+      </p>
 
-        {d.summary && (
-          <section className="mb-6">
-            <h2 className="mb-2 text-[16px] font-semibold text-[var(--ink-100)]">
-              Reality
-            </h2>
-            <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--ink-300)]">
-              {d.summary}
-            </p>
-          </section>
-        )}
+      {/* Report document — also the print surface, identical to control's PDF */}
+      <ReportDocument debrief={d} comments={allComments} onCommentAdded={handleCommentAdded} />
 
-        {/* Directives — each with its own reply form */}
-        <section>
-          <h2 className="mb-3 text-[16px] font-semibold text-[var(--ink-100)]">
-            Directives
-          </h2>
-          {directives.length === 0 ? (
-            <p className="text-[14px] text-[var(--ink-500)]">
-              No directives were issued for this incident. You can still add
-              general commentary below.
-            </p>
-          ) : (
-            <div className="space-y-4">
-              {directives.map((b) => (
-                <div key={b.id} className="border-l-2 border-[var(--line-hi)] pl-4">
-                  <div className="mb-1.5 font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--ink-400)]">
-                    To: <span className="text-[var(--nr-orange)]">{b.to || '—'}</span>
-                  </div>
-                  <ol className="mb-2 space-y-1">
-                    {b.questions
-                      .filter((q) => q.text)
-                      .map((q, i) => (
-                        <li
-                          key={q.id}
-                          className="flex gap-2 text-[15px] text-[var(--ink-300)]"
-                        >
-                          <span className="font-mono text-[13px] text-[var(--ink-500)]">
-                            Q{i + 1}
-                          </span>
-                          {q.text}
-                        </li>
-                      ))}
-                  </ol>
-                  {b.directive && (
-                    <div className="font-mono text-[12px] text-[var(--ink-500)]">
-                      ⟶ {b.directive}
-                    </div>
-                  )}
-
-                  <DirectiveThread
-                    debriefId={d.id}
-                    directiveId={b.id}
-                    debriefTitle={d.title}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-      </article>
-
-      {/* General commentary */}
-      <CommentThread debriefId={d.id} debriefTitle={d.title} />
+      {/* General commentary (screen only) */}
+      <div className="no-print">
+        <CommentThread debriefId={d.id} debriefTitle={d.title} onCommentAdded={handleCommentAdded} />
+      </div>
     </div>
   );
 }

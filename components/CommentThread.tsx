@@ -7,7 +7,15 @@ import { listComments, addComment } from '@/lib/store';
 import { fmtDateTime } from '@/lib/format';
 import { notifyCommentAdded } from '@/lib/notifications';
 
-export default function CommentThread({ debriefId, debriefTitle = '' }: { debriefId: string; debriefTitle?: string }) {
+export default function CommentThread({
+  debriefId,
+  debriefTitle = '',
+  onCommentAdded,
+}: {
+  debriefId: string;
+  debriefTitle?: string;
+  onCommentAdded?: (c: Comment) => void;
+}) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [author, setAuthor] = useState('');
   const [org, setOrg] = useState('');
@@ -26,6 +34,7 @@ export default function CommentThread({ debriefId, debriefTitle = '' }: { debrie
     setPosting(true);
     const c = await addComment(debriefId, author.trim(), org.trim(), body.trim());
     setComments((prev) => [...prev, c]);
+    onCommentAdded?.(c);
     setBody('');
     setPosting(false);
     notifyCommentAdded(debriefTitle);
