@@ -177,6 +177,42 @@ main { position: relative; z-index: 1; }
 }
 .timepick .now:hover { background: var(--nr-orange-glow); }
 
+/* ─── Respond QR block (report + print) ─────────────────────────────── */
+.qr-block {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.qr-code {
+  flex-shrink: 0;
+  background: #fff;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  line-height: 0;
+}
+.qr-caption-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--nr-orange);
+  margin-bottom: 4px;
+}
+.qr-caption-text {
+  font-size: 0.8125rem;
+  color: var(--ink-400);
+  margin-bottom: 6px;
+  max-width: 32ch;
+}
+.qr-caption-url {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  color: var(--ink-500);
+  word-break: break-all;
+}
+
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg-base); }
 ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
@@ -199,5 +235,10 @@ main { position: relative; z-index: 1; }
   .report-document .print-reply { border-left: 2px solid #ccc; padding-left: 10px; margin-top: 6px; page-break-inside: avoid; }
   .report-document .print-reply-meta { font-size: 11px; color: #666; margin-bottom: 3px; }
   .report-document .print-reply-body { font-size: 13px; color: #222; white-space: pre-wrap; }
+  .report-document .qr-block { page-break-inside: avoid; }
+  .report-document .qr-code { border: 1px solid #ccc !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .report-document .qr-caption-title { color: #E05206 !important; }
+  .report-document .qr-caption-text { color: #444 !important; }
+  .report-document .qr-caption-url { color: #666 !important; }
   @page { margin: 18mm 16mm; }
 }

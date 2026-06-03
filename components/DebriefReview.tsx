@@ -10,6 +10,7 @@ import { fmtDate, fmtDateTime } from '@/lib/format';
 import CommentThread from './CommentThread';
 import DirectiveThread from './DirectiveThread';
 import ConfirmModal from './ConfirmModal';
+import RespondQr from './RespondQr';
 
 export default function DebriefReview({ initial }: { initial: Debrief }) {
   const router = useRouter();
@@ -215,6 +216,11 @@ export default function DebriefReview({ initial }: { initial: Debrief }) {
             </div>
           </div>
         )}
+
+        {/* Respond QR — links recipients to the public reply portal */}
+        <section className="rd-rule mt-6 border-t border-[var(--line)] pt-5">
+          <RespondQr debriefId={d.id} />
+        </section>
 
         <footer className="rd-rule rd-muted mt-6 border-t border-[var(--line)] pt-4 font-mono text-[12px] text-[var(--ink-500)]">
           RAID Incident Debrief · Generated {fmtDateTime(new Date().toISOString())}
