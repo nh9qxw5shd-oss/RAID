@@ -1,0 +1,329 @@
+'use client';
+
+import { useMemo } from 'react';
+import { Comment, Debrief, IlrAnswer, IlrReview } from '@/lib/types';
+import { fmtDate, fmtDateTime } from '@/lib/format';
+import DirectiveThread from './DirectiveThread';
+import RespondQr from './RespondQr';
+
+/**
+ * The printable RAID report. This is the single source of truth for the
+ * report layout and the print/PDF surface, shared by the control-side review
+ * page and the public Respond portal so both generate identical PDFs.
+ *
+ * `comments` drives the print-only response blocks; pass `onCommentAdded` so
+ * that responses posted on screen are folded into the printed copy without a
+ * page reload — letting anyone regenerate an up-to-date PDF.
+ */
+export default function ReportDocument({
+  debrief: d,
+  comments,
+  onCommentAdded,
+}: {
+  debrief: Debrief;
+  comments: Comment[];
+  onCommentAdded?: (c: Comment) => void;
+}) {
+  const repliesByDirective = useMemo(() => {
+    const map = new Map<string, Comment[]>();
+    for (const c of comments) {
+      if (c.directive_id) {
+        const existing = map.get(c.directive_id) ?? [];
+        map.set(c.directive_id, [...existing, c]);
+      }
+    }
+    return map;
+  }, [comments]);
+
+  const generalComments = useMemo(
+    () => comments.filter((c) => !c.directive_id),
+    [comments],
+  );
+
+  const meta = [
+    ['Ref', d.ref || '—'],
+    ['Type', d.incident_type || '—'],
+    ['Date', d.incident_date ? `${fmtDate(d.incident_date)} ${d.incident_time}` : '—'],
+    ['Location', d.location || '—'],
+  ] as const;
+
+  return (
+    <article className="report-document card tick-corners p-8">
+      <header className="rd-rule mb-6 border-b border-[var(--line)] pb-5">
+        <div className="mb-2 flex items-center gap-3">
+          <span className="rd-accent font-mono text-[15px] font-medium uppercase tracking-[0.16em] text-[var(--nr-orange)]">
+            RAID Incident Debrief
+          </span>
+          <span className="pill pill-published">Published</span>
+        </div>
+        <h1 className="serif mb-2 text-[28px] leading-tight text-[var(--ink-100)]">
+          {d.title || 'Untitled incident'}
+        </h1>
+        <div className="rd-muted grid grid-cols-2 gap-x-8 gap-y-1 font-mono text-[13px] text-[var(--ink-400)] sm:grid-cols-4">
+          {meta.map(([k, v]) => (
+            <div key={k}>
+              <span className="block text-[11px] uppercase tracking-[0.16em] text-[var(--ink-500)]">{k}</span>
+              <span className="text-[var(--ink-300)]">{v}</span>
+            </div>
+          ))}
+        </div>
+        {(d.author || d.organisation) && (
+          <div className="rd-muted mt-3 font-mono text-[12px] text-[var(--ink-500)]">
+            Lead: {d.author || '—'}
+            {d.organisation && ` · ${d.organisation}`}
+            {d.published_at && ` · Published ${fmtDateTime(d.published_at)}`}
+          </div>
+        )}
+      </header>
+
+      {/* R */}
+      {d.summary && (
+        <Block letter="R" title="Reality">
+          <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--ink-300)]">
+            {d.summary}
+          </p>
+        </Block>
+      )}
+
+      {/* A */}
+      <Block letter="A" title="Actions" accent="var(--nr-green)">
+        <PointList items={d.content.actions.map((a) => a.text)} empty="No actions recorded." />
+      </Block>
+
+      {/* I */}
+      <Block letter="I" title="Inactions" accent="var(--nr-red)">
+        <PointList items={d.content.inactions.map((a) => a.text)} empty="No inactions recorded." />
+      </Block>
+
+      {/* D */}
+      <Block letter="D" title="Directives">
+        {d.content.directives.filter((b) => b.to || b.questions.some((q) => q.text)).length === 0 ? (
+          <p className="rd-muted text-[14px] text-[var(--ink-500)]">No directives issued.</p>
+        ) : (
+          <div className="space-y-4">
+            {d.content.directives
+              .filter((b) => b.to || b.questions.some((q) => q.text))
+              .map((b) => {
+                const replies = repliesByDirective.get(b.id) ?? [];
+                return (
+                  <div key={b.id} className="rd-rule border-l-2 border-[var(--line-hi)] pl-4">
+                    <div className="mb-1.5 font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--ink-400)]">
+                      To: <span className="rd-accent text-[var(--nr-orange)]">{b.to || '—'}</span>
+                    </div>
+                    <ol className="mb-2 space-y-1">
+                      {b.questions
+                        .filter((q) => q.text)
+                        .map((q, i) => (
+                          <li key={q.id} className="flex gap-2 text-[15px] text-[var(--ink-300)]">
+                            <span className="font-mono text-[13px] text-[var(--ink-500)]">Q{i + 1}</span>
+                            {q.text}
+                          </li>
+                        ))}
+                    </ol>
+                    <div className="rd-muted font-mono text-[12px] text-[var(--ink-500)]">
+                      ⟶ {b.directive}
+                    </div>
+
+                    {/* Screen: interactive reply thread */}
+                    <DirectiveThread
+                      debriefId={d.id}
+                      directiveId={b.id}
+                      debriefTitle={d.title}
+                      onCommentAdded={onCommentAdded}
+                    />
+
+                    {/* Print-only: static reply list */}
+                    {replies.length > 0 && (
+                      <div className="print-only mt-2 space-y-2">
+                        <div className="print-reply-meta font-mono text-[11px] uppercase tracking-wide">
+                          Responses ({replies.length})
+                        </div>
+                        {replies.map((c) => (
+                          <div key={c.id} className="print-reply">
+                            <div className="print-reply-meta">
+                              {c.author}{c.organisation ? ` · ${c.organisation}` : ''} &nbsp;·&nbsp; {fmtDateTime(c.created_at)}
+                            </div>
+                            <div className="print-reply-body">{c.body}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+          </div>
+        )}
+      </Block>
+
+      {/* ILR Stage 1 Review */}
+      {d.content.ilrReview && <IlrReviewBlock review={d.content.ilrReview} />}
+
+      {/* Print-only: general comments */}
+      {generalComments.length > 0 && (
+        <div className="print-only">
+          <div className="mb-3 flex items-center gap-2.5 border-t border-[var(--line)] pt-5">
+            <span
+              className="rd-accent flex h-6 w-6 items-center justify-center rounded font-mono text-[14px] font-medium"
+              style={{ background: 'var(--nr-orange-glow)', color: 'var(--nr-orange)' }}
+            >
+              C
+            </span>
+            <h2 className="text-[16px] font-semibold text-[var(--ink-100)]">General Commentary</h2>
+          </div>
+          <div className="space-y-3" style={{ paddingLeft: '2.125rem' }}>
+            {generalComments.map((c) => (
+              <div key={c.id} className="print-reply">
+                <div className="print-reply-meta">
+                  {c.author}{c.organisation ? ` · ${c.organisation}` : ''} &nbsp;·&nbsp; {fmtDateTime(c.created_at)}
+                </div>
+                <div className="print-reply-body">{c.body}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Respond QR — links recipients to the public reply portal */}
+      <section className="rd-rule mt-6 border-t border-[var(--line)] pt-5">
+        <RespondQr debriefId={d.id} />
+      </section>
+
+      <footer className="rd-rule rd-muted mt-6 border-t border-[var(--line)] pt-4 font-mono text-[12px] text-[var(--ink-500)]">
+        RAID Incident Debrief · Generated {fmtDateTime(new Date().toISOString())}
+      </footer>
+    </article>
+  );
+}
+
+function Block({
+  letter,
+  title,
+  accent = 'var(--nr-orange)',
+  children,
+}: {
+  letter: string;
+  title: string;
+  accent?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="mb-6">
+      <div className="mb-3 flex items-center gap-2.5">
+        <span
+          className="rd-accent flex h-6 w-6 items-center justify-center rounded font-mono text-[14px] font-medium"
+          style={{ background: 'var(--nr-orange-glow)', color: accent }}
+        >
+          {letter}
+        </span>
+        <h2 className="text-[16px] font-semibold text-[var(--ink-100)]">{title}</h2>
+      </div>
+      <div className="pl-8.5" style={{ paddingLeft: '2.125rem' }}>
+        {children}
+      </div>
+    </section>
+  );
+}
+
+// ─── ILR review block (rendered inside the printed report) ──────────────────
+
+const ILR_QUESTIONS: Array<{ key: keyof IlrReview; label: string }> = [
+  { key: 'q1', label: 'Did you follow Disruption Management principles?' },
+  { key: 'q2', label: 'Did you classify the Level of Disruption?' },
+  { key: 'q3', label: 'Did you agree Service Containment via TRC within 10 minutes?' },
+  { key: 'q4', label: 'Did you hold a first Huddle?' },
+  { key: 'q5', label: 'Were there any communications concerns during the incident?' },
+];
+
+function IlrAnswerPill({ answer }: { answer: IlrAnswer['answer'] }) {
+  if (!answer) return <span className="text-[var(--ink-500)] font-mono text-[12px]">—</span>;
+  const isYes = answer === 'yes';
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded px-2 py-0.5 font-mono text-[12px] font-medium uppercase tracking-wide"
+      style={{
+        background: isYes ? 'rgba(39,174,96,0.12)' : 'rgba(231,76,60,0.12)',
+        border: `1px solid ${isYes ? 'rgba(39,174,96,0.4)' : 'rgba(231,76,60,0.4)'}`,
+        color: isYes ? '#4ED88B' : '#FF8077',
+      }}
+    >
+      {isYes ? '✓ Yes' : '✗ No'}
+    </span>
+  );
+}
+
+function IlrReviewBlock({ review }: { review: IlrReview }) {
+  const hasAnyAnswer = ILR_QUESTIONS.some((q) => review[q.key].answer !== null);
+  if (!hasAnyAnswer) return null;
+
+  return (
+    <section className="mb-6">
+      <div className="mb-3 flex items-center gap-2.5">
+        <span
+          className="rd-accent flex h-6 items-center justify-center rounded px-1.5 font-mono text-[11px] font-medium"
+          style={{ background: 'var(--nr-orange-glow)', color: 'var(--nr-orange)' }}
+        >
+          ILR
+        </span>
+        <h2 className="text-[16px] font-semibold text-[var(--ink-100)]">Stage 1 Review</h2>
+      </div>
+      <div style={{ paddingLeft: '2.125rem' }}>
+        <div className="space-y-3">
+          {ILR_QUESTIONS.map(({ key, label }, i) => {
+            const a = review[key];
+            return (
+              <div key={key} className="border-b border-[var(--line)] pb-3 last:border-0 last:pb-0">
+                <div className="flex items-start justify-between gap-4">
+                  <span className="text-[14px] leading-snug text-[var(--ink-300)]">
+                    <span className="mr-2 font-mono text-[12px] text-[var(--nr-orange)]">Q{i + 1}</span>
+                    {label}
+                  </span>
+                  <IlrAnswerPill answer={a.answer} />
+                </div>
+                {/* Extra detail (Q2) */}
+                {key === 'q2' && a.answer === 'yes' && (a.level || a.escalated) && (
+                  <div className="mt-1.5 flex flex-wrap gap-4 pl-6 font-mono text-[12px] text-[var(--ink-400)]">
+                    {a.level && <span>Level: <span className="text-[var(--ink-200)]">{a.level}</span></span>}
+                    {a.escalated && (
+                      <span>Escalated: <span className="text-[var(--ink-200)]">{a.escalated === 'yes' ? 'Yes' : 'No'}</span></span>
+                    )}
+                  </div>
+                )}
+                {/* Extra detail (Q4) */}
+                {key === 'q4' && a.answer === 'yes' && (a.huddleTime || a.furtherHuddles) && (
+                  <div className="mt-1.5 flex flex-wrap gap-4 pl-6 font-mono text-[12px] text-[var(--ink-400)]">
+                    {a.huddleTime && <span>First huddle: <span className="text-[var(--ink-200)]">{a.huddleTime}</span></span>}
+                    {a.furtherHuddles && (
+                      <span>Further huddles: <span className="text-[var(--ink-200)]">{a.furtherHuddles === 'yes' ? 'Yes' : 'No'}</span></span>
+                    )}
+                  </div>
+                )}
+                {/* Comment */}
+                {a.comment && (
+                  <p className="mt-1.5 pl-6 text-[13px] italic leading-relaxed text-[var(--ink-400)]">
+                    {a.comment}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PointList({ items, empty }: { items: string[]; empty: string }) {
+  const filtered = items.filter((t) => t.trim());
+  if (filtered.length === 0)
+    return <p className="rd-muted text-[14px] text-[var(--ink-500)]">{empty}</p>;
+  return (
+    <ul className="space-y-1.5">
+      {filtered.map((t, i) => (
+        <li key={i} className="flex gap-2.5 text-[15px] leading-relaxed text-[var(--ink-300)]">
+          <span className="rd-accent mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[var(--nr-orange)]" />
+          {t}
+        </li>
+      ))}
+    </ul>
+  );
+}
