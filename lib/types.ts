@@ -129,8 +129,10 @@ export interface Entity {
   is_control: boolean;
   active: boolean;
   sort_order: number;
-  /** Whether a passcode has been set — the code itself is never exposed. */
+  /** Whether a passcode has been set. */
   has_passcode: boolean;
+  /** The 4-digit code itself — only returned to Control sessions. */
+  passcode?: string;
 }
 
 /** The signed-in entity, as reported by the session cookie. */

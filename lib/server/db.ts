@@ -19,7 +19,18 @@ export function serviceClient(): SupabaseClient {
     );
   }
   if (!_client) {
-    _client = createClient(url, key, { auth: { persistSession: false } });
+    _client = createClient(url, key, {
+      auth: { persistSession: false },
+      // Next.js patches global fetch and caches GETs by default (Data Cache),
+      // which persists across deployments on Vercel. supabase-js reads ride
+      // that fetch, so without this every read can be served stale — a write
+      // lands in the DB but the next list still shows pre-write state. Forcing
+      // no-store makes all Supabase reads uncached and always current.
+      global: {
+        fetch: (input: RequestInfo | URL, init?: RequestInit) =>
+          fetch(input, { ...init, cache: 'no-store' }),
+      },
+    });
   }
   return _client;
 }
