@@ -50,6 +50,9 @@ function hydrate(row: Record<string, unknown>): Debrief {
   return {
     id: String(row.id),
     ref: (row.ref as string) || '',
+    tda_ref: (row.tda_ref as string) || '',
+    minutes_ref: (row.minutes_ref as string) || '',
+    cancellation_ref: (row.cancellation_ref as string) || '',
     title: (row.title as string) || '',
     incident_date: (row.incident_date as string) || '',
     incident_time: (row.incident_time as string) || '',
@@ -121,6 +124,9 @@ export async function createDebrief(seed: Partial<Debrief> = {}): Promise<Debrie
   const draft: Debrief = {
     id: uid(),
     ref: seed.ref || '',
+    tda_ref: seed.tda_ref || '',
+    minutes_ref: seed.minutes_ref || '',
+    cancellation_ref: seed.cancellation_ref || '',
     title: seed.title || '',
     incident_date: seed.incident_date || '',
     incident_time: seed.incident_time || '',
@@ -142,6 +148,9 @@ export async function createDebrief(seed: Partial<Debrief> = {}): Promise<Debrie
       .from('debriefs')
       .insert({
         ref: draft.ref,
+        tda_ref: draft.tda_ref,
+        minutes_ref: draft.minutes_ref,
+        cancellation_ref: draft.cancellation_ref,
         title: draft.title,
         incident_date: draft.incident_date || null,
         incident_time: draft.incident_time,

@@ -47,6 +47,12 @@ export default function ReportDocument({
     ['Location', d.location || '—'],
   ] as const;
 
+  const refsMeta = [
+    ['TDA Ref', d.tda_ref],
+    ['Minutes Ref', d.minutes_ref],
+    ['Cancellation Ref', d.cancellation_ref],
+  ].filter(([, v]) => v) as Array<[string, string]>;
+
   return (
     <article className="report-document card tick-corners p-8">
       <header className="rd-rule mb-6 border-b border-[var(--line)] pb-5">
@@ -67,6 +73,16 @@ export default function ReportDocument({
             </div>
           ))}
         </div>
+        {refsMeta.length > 0 && (
+          <div className="rd-muted mt-2 grid grid-cols-2 gap-x-8 gap-y-1 font-mono text-[13px] text-[var(--ink-400)] sm:grid-cols-4">
+            {refsMeta.map(([k, v]) => (
+              <div key={k}>
+                <span className="block text-[11px] uppercase tracking-[0.16em] text-[var(--ink-500)]">{k}</span>
+                <span className="text-[var(--ink-300)]">{v}</span>
+              </div>
+            ))}
+          </div>
+        )}
         {(d.author || d.organisation) && (
           <div className="rd-muted mt-3 font-mono text-[12px] text-[var(--ink-500)]">
             Lead: {d.author || '—'}

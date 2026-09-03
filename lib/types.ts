@@ -88,6 +88,9 @@ export interface DebriefContent {
 export interface Debrief {
   id: string;
   ref: string;
+  tda_ref: string;
+  minutes_ref: string;
+  cancellation_ref: string;
   title: string;
   incident_date: string;
   incident_time: string;
@@ -109,8 +112,85 @@ export interface Comment {
   directive_id?: string;
   author: string;
   organisation: string;
+  /** Entity stamp — set server-side from the session; never client-supplied. */
+  entity_id?: string;
+  entity_name?: string;
   body: string;
   created_at: string;
+}
+
+// ─── Multi-entity feedback ──────────────────────────────────────────────
+
+/** An organisation that can sign in with its shared 4-digit passcode. */
+export interface Entity {
+  id: string;
+  slug: string;
+  name: string;
+  is_control: boolean;
+  active: boolean;
+  sort_order: number;
+  /** Whether a passcode has been set — the code itself is never exposed. */
+  has_passcode: boolean;
+}
+
+/** The signed-in entity, as reported by the session cookie. */
+export interface Session {
+  entityId: string;
+  slug: string;
+  name: string;
+  isControl: boolean;
+}
+
+/** An entity's structured viewpoint — mirrors the RAID shape. */
+export interface EntityResponseContent {
+  actions: Point[];
+  inactions: Point[];
+  narrative: string;
+}
+
+export interface EntityResponse {
+  id: string;
+  debrief_id: string;
+  entity_id: string;
+  entity_name: string;
+  entity_slug: string;
+  content: EntityResponseContent;
+  status: 'draft' | 'submitted';
+  created_at: string;
+  updated_at: string;
+  submitted_at: string | null;
+}
+
+export function emptyResponseContent(): EntityResponseContent {
+  return { actions: [], inactions: [], narrative: '' };
+}
+
+/** One thumb up/down per entity per point. */
+export interface Reaction {
+  id: string;
+  debrief_id: string;
+  point_id: string;
+  entity_id: string;
+  entity_name: string;
+  reaction: 'up' | 'down';
+  created_at: string;
+}
+
+/** A publish-notice email recipient. */
+export interface Recipient {
+  id: string;
+  name: string;
+  email: string;
+  active: boolean;
+  created_at: string;
+}
+
+/** Outcome of the publish email fan-out, reported back to the UI. */
+export interface PublishEmailResult {
+  attempted: number;
+  sent: number;
+  pdfAttached: boolean;
+  error?: string;
 }
 
 export function emptyContent(): DebriefContent {

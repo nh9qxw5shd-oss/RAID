@@ -35,6 +35,9 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
       setSaving(true);
       const updated = await updateDebrief(d.id, {
         ref: d.ref,
+        tda_ref: d.tda_ref,
+        minutes_ref: d.minutes_ref,
+        cancellation_ref: d.cancellation_ref,
         title: d.title,
         incident_date: d.incident_date,
         incident_time: d.incident_time,
@@ -69,7 +72,8 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
     setModal('none');
     setPublishing(true);
     await updateDebrief(d.id, {
-      ref: d.ref, title: d.title, incident_date: d.incident_date, incident_time: d.incident_time,
+      ref: d.ref, tda_ref: d.tda_ref, minutes_ref: d.minutes_ref, cancellation_ref: d.cancellation_ref,
+      title: d.title, incident_date: d.incident_date, incident_time: d.incident_time,
       incident_type: d.incident_type, location: d.location, summary: d.summary,
       content: d.content, author: d.author, organisation: d.organisation,
     });
