@@ -21,7 +21,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 }
 
 const EDITABLE_FIELDS = [
-  'ref', 'tda_ref', 'minutes_ref', 'cancellation_ref', 'title', 'incident_date',
+  'ref', 'tda_ref', 'minutes_ref', 'full_cancellations', 'part_cancellations', 'title', 'incident_date',
   'incident_time', 'incident_type', 'location', 'summary', 'content', 'author',
   'organisation', 'status', 'published_at',
 ] as const;

@@ -9,7 +9,8 @@ type RealityFields = Pick<
   | 'ref'
   | 'tda_ref'
   | 'minutes_ref'
-  | 'cancellation_ref'
+  | 'full_cancellations'
+  | 'part_cancellations'
   | 'title'
   | 'incident_date'
   | 'incident_time'
@@ -88,7 +89,7 @@ export default function RealitySection({
           />
         </div>
 
-        <div className="md:col-span-4">
+        <div className="md:col-span-3">
           <label className="label-micro mb-1.5 block">TDA Ref</label>
           <input
             className="input input-mono"
@@ -97,22 +98,34 @@ export default function RealitySection({
             placeholder="TDA reference"
           />
         </div>
-        <div className="md:col-span-4">
-          <label className="label-micro mb-1.5 block">Minutes Ref</label>
+        <div className="md:col-span-3">
+          <label className="label-micro mb-1.5 block">Total Minutes</label>
           <input
             className="input input-mono"
+            inputMode="numeric"
             value={value.minutes_ref}
             onChange={(e) => onChange({ minutes_ref: e.target.value })}
-            placeholder="Meeting minutes reference"
+            placeholder="e.g. 320"
           />
         </div>
-        <div className="md:col-span-4">
-          <label className="label-micro mb-1.5 block">Cancellation Ref</label>
+        <div className="md:col-span-3">
+          <label className="label-micro mb-1.5 block">Full Cancellations</label>
           <input
             className="input input-mono"
-            value={value.cancellation_ref}
-            onChange={(e) => onChange({ cancellation_ref: e.target.value })}
-            placeholder="Cancellation reference"
+            inputMode="numeric"
+            value={value.full_cancellations}
+            onChange={(e) => onChange({ full_cancellations: e.target.value })}
+            placeholder="e.g. 4"
+          />
+        </div>
+        <div className="md:col-span-3">
+          <label className="label-micro mb-1.5 block">Part Cancellations</label>
+          <input
+            className="input input-mono"
+            inputMode="numeric"
+            value={value.part_cancellations}
+            onChange={(e) => onChange({ part_cancellations: e.target.value })}
+            placeholder="e.g. 7"
           />
         </div>
 

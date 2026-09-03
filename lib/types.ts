@@ -89,7 +89,8 @@ export interface Debrief {
   ref: string;
   tda_ref: string;
   minutes_ref: string;
-  cancellation_ref: string;
+  full_cancellations: string;
+  part_cancellations: string;
   title: string;
   incident_date: string;
   incident_time: string;
