@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ChevronDown, ChevronUp, Download, Loader2, ShieldCheck } from 'lucide-react';
-import { Comment, Debrief, EntityResponse } from '@/lib/types';
-import { getDebrief, listAllComments, listResponses } from '@/lib/store';
+import { Comment, Debrief, EntityResponse, Reaction } from '@/lib/types';
+import { getDebrief, listAllComments, listReactions, listResponses } from '@/lib/store';
 import { useSession } from '@/lib/session';
 import CommentThread from '@/components/CommentThread';
 import EntityGate from '@/components/EntityGate';
@@ -24,6 +24,7 @@ export default function RespondDebriefPage() {
   // a freshly generated PDF always includes the latest commentary.
   const [allComments, setAllComments] = useState<Comment[]>([]);
   const [responses, setResponses] = useState<EntityResponse[]>([]);
+  const [reactions, setReactions] = useState<Reaction[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -43,6 +44,7 @@ export default function RespondDebriefPage() {
   useEffect(() => {
     if (!id || state !== 'ready' || sessionLoading) return;
     listResponses(id).then(setResponses).catch(() => {/* best-effort */});
+    listReactions(id).then(setReactions).catch(() => {/* best-effort */});
   }, [id, state, sessionLoading, session?.entityId]);
 
   const handleCommentAdded = (c: Comment) => setAllComments((prev) => [...prev, c]);
@@ -128,7 +130,9 @@ export default function RespondDebriefPage() {
         debrief={d}
         comments={allComments}
         responses={responses}
+        reactions={reactions}
         onCommentAdded={handleCommentAdded}
+        onReactionsChanged={setReactions}
       />
 
       {/* Own viewpoint + general commentary (screen only) */}

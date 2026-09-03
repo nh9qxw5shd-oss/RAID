@@ -1,9 +1,10 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Comment, Debrief, EntityResponse, IlrAnswer, IlrReview } from '@/lib/types';
+import { Comment, Debrief, EntityResponse, IlrAnswer, IlrReview, Point, Reaction } from '@/lib/types';
 import { fmtDate, fmtDateTime } from '@/lib/format';
 import DirectiveThread from './DirectiveThread';
+import ReactionBar from './ReactionBar';
 import RespondQr from './RespondQr';
 
 /**
@@ -19,13 +20,18 @@ export default function ReportDocument({
   debrief: d,
   comments,
   responses = [],
+  reactions = [],
   onCommentAdded,
+  onReactionsChanged,
 }: {
   debrief: Debrief;
   comments: Comment[];
   /** Entity viewpoints — only submitted ones are rendered. */
   responses?: EntityResponse[];
+  /** Thumb up/down votes across all points of the debrief. */
+  reactions?: Reaction[];
   onCommentAdded?: (c: Comment) => void;
+  onReactionsChanged?: (all: Reaction[]) => void;
 }) {
   const submittedResponses = useMemo(
     () => responses.filter((r) => r.status === 'submitted'),
@@ -110,12 +116,24 @@ export default function ReportDocument({
 
       {/* A */}
       <Block letter="A" title="Actions" accent="var(--nr-green)">
-        <PointList items={d.content.actions.map((a) => a.text)} empty="No actions recorded." />
+        <PointList
+          debriefId={d.id}
+          points={d.content.actions}
+          reactions={reactions}
+          onReactionsChanged={onReactionsChanged}
+          empty="No actions recorded."
+        />
       </Block>
 
       {/* I */}
       <Block letter="I" title="Inactions" accent="var(--nr-red)">
-        <PointList items={d.content.inactions.map((a) => a.text)} empty="No inactions recorded." />
+        <PointList
+          debriefId={d.id}
+          points={d.content.inactions}
+          reactions={reactions}
+          onReactionsChanged={onReactionsChanged}
+          empty="No inactions recorded."
+        />
       </Block>
 
       {/* D */}
@@ -207,6 +225,9 @@ export default function ReportDocument({
                     label="Actions — what worked"
                     color="var(--nr-green)"
                     points={r.content.actions}
+                    debriefId={d.id}
+                    reactions={reactions}
+                    onReactionsChanged={onReactionsChanged}
                   />
                 )}
                 {r.content.inactions.some((p) => p.text.trim()) && (
@@ -214,6 +235,9 @@ export default function ReportDocument({
                     label="Inactions — gaps"
                     color="var(--nr-red)"
                     points={r.content.inactions}
+                    debriefId={d.id}
+                    reactions={reactions}
+                    onReactionsChanged={onReactionsChanged}
                   />
                 )}
               </div>
@@ -380,10 +404,16 @@ function ViewpointPoints({
   label,
   color,
   points,
+  debriefId,
+  reactions,
+  onReactionsChanged,
 }: {
   label: string;
   color: string;
-  points: EntityResponse['content']['actions'];
+  points: Point[];
+  debriefId: string;
+  reactions: Reaction[];
+  onReactionsChanged?: (all: Reaction[]) => void;
 }) {
   return (
     <div className="mb-2">
@@ -396,7 +426,15 @@ function ViewpointPoints({
           .map((p) => (
             <li key={p.id} className="flex gap-2.5 text-[14px] leading-relaxed text-[var(--ink-300)]">
               <span className="rd-accent mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[var(--nr-orange)]" />
-              {p.text}
+              <span className="flex-1">
+                {p.text}
+                <ReactionBar
+                  debriefId={debriefId}
+                  pointId={p.id}
+                  reactions={reactions}
+                  onChanged={onReactionsChanged}
+                />
+              </span>
             </li>
           ))}
       </ul>
@@ -404,16 +442,36 @@ function ViewpointPoints({
   );
 }
 
-function PointList({ items, empty }: { items: string[]; empty: string }) {
-  const filtered = items.filter((t) => t.trim());
+function PointList({
+  debriefId,
+  points,
+  reactions,
+  onReactionsChanged,
+  empty,
+}: {
+  debriefId: string;
+  points: Point[];
+  reactions: Reaction[];
+  onReactionsChanged?: (all: Reaction[]) => void;
+  empty: string;
+}) {
+  const filtered = points.filter((p) => p.text.trim());
   if (filtered.length === 0)
     return <p className="rd-muted text-[14px] text-[var(--ink-500)]">{empty}</p>;
   return (
     <ul className="space-y-1.5">
-      {filtered.map((t, i) => (
-        <li key={i} className="flex gap-2.5 text-[15px] leading-relaxed text-[var(--ink-300)]">
+      {filtered.map((p) => (
+        <li key={p.id} className="flex gap-2.5 text-[15px] leading-relaxed text-[var(--ink-300)]">
           <span className="rd-accent mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[var(--nr-orange)]" />
-          {t}
+          <span className="flex-1">
+            {p.text}
+            <ReactionBar
+              debriefId={debriefId}
+              pointId={p.id}
+              reactions={reactions}
+              onChanged={onReactionsChanged}
+            />
+          </span>
         </li>
       ))}
     </ul>
