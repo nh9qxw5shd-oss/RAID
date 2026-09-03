@@ -199,7 +199,7 @@ export default function ReportDocument({
 
       {/* Entity viewpoints — stored alongside the Control original */}
       {submittedResponses.length > 0 && (
-        <Block letter="V" title="Entity Viewpoints">
+        <Block letter="V" title="Stakeholder Viewpoints">
           <div className="space-y-5">
             {submittedResponses.map((r) => (
               <div key={r.id} className="rd-rule border-l-2 border-[var(--line-hi)] pl-4">

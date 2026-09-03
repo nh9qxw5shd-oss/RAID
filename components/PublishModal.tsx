@@ -90,7 +90,7 @@ export default function PublishModal({
               Publish debrief?
             </h2>
             <p className="mt-1 text-[13px] leading-relaxed text-[var(--ink-400)]">
-              The debrief becomes read-only and open for entity viewpoints,
+              The debrief becomes read-only and open for stakeholder viewpoints,
               reactions, and commentary. Ticked recipients are emailed the
               report with the respond link.
             </p>
