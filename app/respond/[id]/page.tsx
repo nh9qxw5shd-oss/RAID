@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ChevronDown, ChevronUp, Download, Loader2, ShieldCheck } from 'lucide-react';
-import { Comment, Debrief } from '@/lib/types';
-import { getDebrief, listAllComments } from '@/lib/store';
+import { Comment, Debrief, EntityResponse } from '@/lib/types';
+import { getDebrief, listAllComments, listResponses } from '@/lib/store';
 import { useSession } from '@/lib/session';
 import CommentThread from '@/components/CommentThread';
 import EntityGate from '@/components/EntityGate';
+import EntityResponsePanel from '@/components/EntityResponsePanel';
 import ReportDocument from '@/components/ReportDocument';
 
 export default function RespondDebriefPage() {
@@ -22,6 +23,7 @@ export default function RespondDebriefPage() {
   // Comments back the print-only blocks; responses posted here are appended so
   // a freshly generated PDF always includes the latest commentary.
   const [allComments, setAllComments] = useState<Comment[]>([]);
+  const [responses, setResponses] = useState<EntityResponse[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -37,7 +39,21 @@ export default function RespondDebriefPage() {
     });
   }, [id]);
 
+  // Refetched when the session changes so the caller's own draft appears.
+  useEffect(() => {
+    if (!id || state !== 'ready' || sessionLoading) return;
+    listResponses(id).then(setResponses).catch(() => {/* best-effort */});
+  }, [id, state, sessionLoading, session?.entityId]);
+
   const handleCommentAdded = (c: Comment) => setAllComments((prev) => [...prev, c]);
+  const handleResponseSaved = (r: EntityResponse) =>
+    setResponses((prev) => {
+      const idx = prev.findIndex((x) => x.entity_id === r.entity_id);
+      return idx >= 0 ? prev.map((x, i) => (i === idx ? r : x)) : [...prev, r];
+    });
+
+  const myResponse =
+    (session && responses.find((r) => r.entity_id === session.entityId)) || null;
 
   if (state === 'loading') {
     return (
@@ -108,10 +124,22 @@ export default function RespondDebriefPage() {
       )}
 
       {/* Report document — also the print surface, identical to control's PDF */}
-      <ReportDocument debrief={d} comments={allComments} onCommentAdded={handleCommentAdded} />
+      <ReportDocument
+        debrief={d}
+        comments={allComments}
+        responses={responses}
+        onCommentAdded={handleCommentAdded}
+      />
 
-      {/* General commentary (screen only) */}
+      {/* Own viewpoint + general commentary (screen only) */}
       <div className="no-print">
+        {session && (
+          <EntityResponsePanel
+            debriefId={d.id}
+            initial={myResponse}
+            onSaved={handleResponseSaved}
+          />
+        )}
         <CommentThread debriefId={d.id} debriefTitle={d.title} onCommentAdded={handleCommentAdded} />
       </div>
     </div>

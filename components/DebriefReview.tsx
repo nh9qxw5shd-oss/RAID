@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Download, Undo2 } from 'lucide-react';
-import { Comment, Debrief } from '@/lib/types';
-import { revertToDraft, listAllComments } from '@/lib/store';
+import { Comment, Debrief, EntityResponse } from '@/lib/types';
+import { revertToDraft, listAllComments, listResponses } from '@/lib/store';
 import CommentThread from './CommentThread';
 import ConfirmModal from './ConfirmModal';
 import ReportDocument from './ReportDocument';
@@ -19,8 +19,10 @@ export default function DebriefReview({ initial }: { initial: Debrief }) {
   // New responses posted on screen are appended so the printed copy stays
   // current without a reload.
   const [allComments, setAllComments] = useState<Comment[]>([]);
+  const [responses, setResponses] = useState<EntityResponse[]>([]);
   useEffect(() => {
     listAllComments(d.id).then(setAllComments).catch(() => {/* best-effort */});
+    listResponses(d.id).then(setResponses).catch(() => {/* best-effort */});
   }, [d.id]);
 
   const handleCommentAdded = (c: Comment) => setAllComments((prev) => [...prev, c]);
@@ -61,7 +63,12 @@ export default function DebriefReview({ initial }: { initial: Debrief }) {
       </div>
 
       {/* Report document — also the print surface */}
-      <ReportDocument debrief={d} comments={allComments} onCommentAdded={handleCommentAdded} />
+      <ReportDocument
+        debrief={d}
+        comments={allComments}
+        responses={responses}
+        onCommentAdded={handleCommentAdded}
+      />
 
       {/* Commentary (screen only) */}
       <div className="no-print">

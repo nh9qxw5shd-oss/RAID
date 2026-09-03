@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Comment, Debrief, IlrAnswer, IlrReview } from '@/lib/types';
+import { Comment, Debrief, EntityResponse, IlrAnswer, IlrReview } from '@/lib/types';
 import { fmtDate, fmtDateTime } from '@/lib/format';
 import DirectiveThread from './DirectiveThread';
 import RespondQr from './RespondQr';
@@ -18,12 +18,19 @@ import RespondQr from './RespondQr';
 export default function ReportDocument({
   debrief: d,
   comments,
+  responses = [],
   onCommentAdded,
 }: {
   debrief: Debrief;
   comments: Comment[];
+  /** Entity viewpoints — only submitted ones are rendered. */
+  responses?: EntityResponse[];
   onCommentAdded?: (c: Comment) => void;
 }) {
+  const submittedResponses = useMemo(
+    () => responses.filter((r) => r.status === 'submitted'),
+    [responses],
+  );
   const repliesByDirective = useMemo(() => {
     const map = new Map<string, Comment[]>();
     for (const c of comments) {
@@ -173,6 +180,47 @@ export default function ReportDocument({
 
       {/* ILR Stage 1 Review */}
       {d.content.ilrReview && <IlrReviewBlock review={d.content.ilrReview} />}
+
+      {/* Entity viewpoints — stored alongside the Control original */}
+      {submittedResponses.length > 0 && (
+        <Block letter="V" title="Entity Viewpoints">
+          <div className="space-y-5">
+            {submittedResponses.map((r) => (
+              <div key={r.id} className="rd-rule border-l-2 border-[var(--line-hi)] pl-4">
+                <div className="mb-1.5 flex items-baseline justify-between gap-3">
+                  <span className="rd-accent font-mono text-[13px] font-medium uppercase tracking-[0.14em] text-[var(--nr-orange)]">
+                    {r.entity_name}
+                  </span>
+                  {r.submitted_at && (
+                    <span className="rd-muted shrink-0 font-mono text-[11px] text-[var(--ink-500)]">
+                      Submitted {fmtDateTime(r.submitted_at)}
+                    </span>
+                  )}
+                </div>
+                {r.content.narrative.trim() && (
+                  <p className="mb-2.5 whitespace-pre-wrap text-[14px] leading-relaxed text-[var(--ink-300)]">
+                    {r.content.narrative}
+                  </p>
+                )}
+                {r.content.actions.some((p) => p.text.trim()) && (
+                  <ViewpointPoints
+                    label="Actions — what worked"
+                    color="var(--nr-green)"
+                    points={r.content.actions}
+                  />
+                )}
+                {r.content.inactions.some((p) => p.text.trim()) && (
+                  <ViewpointPoints
+                    label="Inactions — gaps"
+                    color="var(--nr-red)"
+                    points={r.content.inactions}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </Block>
+      )}
 
       {/* Print-only: general comments */}
       {generalComments.length > 0 && (
@@ -325,6 +373,34 @@ function IlrReviewBlock({ review }: { review: IlrReview }) {
         </div>
       </div>
     </section>
+  );
+}
+
+function ViewpointPoints({
+  label,
+  color,
+  points,
+}: {
+  label: string;
+  color: string;
+  points: EntityResponse['content']['actions'];
+}) {
+  return (
+    <div className="mb-2">
+      <div className="mb-1 font-mono text-[11px] uppercase tracking-[0.14em]" style={{ color }}>
+        {label}
+      </div>
+      <ul className="space-y-1">
+        {points
+          .filter((p) => p.text.trim())
+          .map((p) => (
+            <li key={p.id} className="flex gap-2.5 text-[14px] leading-relaxed text-[var(--ink-300)]">
+              <span className="rd-accent mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[var(--nr-orange)]" />
+              {p.text}
+            </li>
+          ))}
+      </ul>
+    </div>
   );
 }
 
