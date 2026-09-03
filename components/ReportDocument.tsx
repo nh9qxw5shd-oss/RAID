@@ -316,9 +316,9 @@ function Block({
 
 const ILR_QUESTIONS: Array<{ key: keyof IlrReview; label: string }> = [
   { key: 'q1', label: 'Did you follow Disruption Management principles?' },
-  { key: 'q2', label: 'Did you classify the Level of Disruption?' },
-  { key: 'q3', label: 'Did you agree Service Containment via TRC within 10 minutes?' },
-  { key: 'q4', label: 'Did you hold a first Huddle?' },
+  { key: 'q2', label: 'How was the incident classified?' },
+  { key: 'q3', label: 'Did you agree initial service status and options with TRC / Sig within 10 min?' },
+  { key: 'q4', label: 'Was ITSR implemented — if so, when was the first call / huddle?' },
   { key: 'q5', label: 'Were there any communications concerns during the incident?' },
 ];
 
@@ -379,7 +379,7 @@ function IlrReviewBlock({ review }: { review: IlrReview }) {
                 {/* Extra detail (Q4) */}
                 {key === 'q4' && a.answer === 'yes' && (a.huddleTime || a.furtherHuddles) && (
                   <div className="mt-1.5 flex flex-wrap gap-4 pl-6 font-mono text-[12px] text-[var(--ink-400)]">
-                    {a.huddleTime && <span>First huddle: <span className="text-[var(--ink-200)]">{a.huddleTime}</span></span>}
+                    {a.huddleTime && <span>First call / huddle: <span className="text-[var(--ink-200)]">{a.huddleTime}</span></span>}
                     {a.furtherHuddles && (
                       <span>Further huddles: <span className="text-[var(--ink-200)]">{a.furtherHuddles === 'yes' ? 'Yes' : 'No'}</span></span>
                     )}

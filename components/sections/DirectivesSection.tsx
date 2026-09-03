@@ -102,11 +102,11 @@ export default function DirectivesSection({
           </button>
 
           <div className="flex items-center gap-2.5 border-t border-[var(--line)] pt-3">
-            <span className="label-micro shrink-0">Required</span>
             <input
               className="input"
               value={block.directive}
               onChange={(e) => patchBlock(block.id, { directive: e.target.value })}
+              placeholder="Directive / action arising…"
             />
           </div>
         </div>
