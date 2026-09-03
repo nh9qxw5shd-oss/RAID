@@ -25,12 +25,11 @@ export interface DirectiveQuestion {
   text: string;
 }
 
-/** A block of questions addressed to a named party, with a required action. */
+/** A block of questions addressed to a named party. */
 export interface Directive {
   id: string;
   to: string;
   questions: DirectiveQuestion[];
-  directive: string;
 }
 
 // ─── ILR Stage 1 Review ─────────────────────────────────────────────────

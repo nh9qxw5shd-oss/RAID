@@ -161,9 +161,6 @@ export default function ReportDocument({
                           </li>
                         ))}
                     </ol>
-                    <div className="rd-muted font-mono text-[12px] text-[var(--ink-500)]">
-                      ⟶ {b.directive}
-                    </div>
 
                     {/* Screen: interactive reply thread */}
                     <DirectiveThread
