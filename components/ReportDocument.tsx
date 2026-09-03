@@ -62,8 +62,9 @@ export default function ReportDocument({
 
   const refsMeta = [
     ['TDA Ref', d.tda_ref],
-    ['Minutes Ref', d.minutes_ref],
-    ['Cancellation Ref', d.cancellation_ref],
+    ['Total Minutes', d.minutes_ref],
+    ['Full Cancellations', d.full_cancellations],
+    ['Part Cancellations', d.part_cancellations],
   ].filter(([, v]) => v) as Array<[string, string]>;
 
   return (
