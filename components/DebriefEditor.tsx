@@ -10,7 +10,8 @@ import ActionsInactionsSection from './sections/ActionsInactionsSection';
 import DirectivesSection from './sections/DirectivesSection';
 import IlrReviewSection from './sections/IlrReviewSection';
 import ConfirmModal from './ConfirmModal';
-import { Debrief, Point, Directive, IlrReview, emptyIlrReview } from '@/lib/types';
+import PublishModal from './PublishModal';
+import { Debrief, Point, Directive, IlrReview, PublishEmailResult, emptyIlrReview } from '@/lib/types';
 import { updateDebrief, publishDebrief, deleteDebrief } from '@/lib/store';
 import { fmtRelative } from '@/lib/format';
 
@@ -23,6 +24,7 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
   const [savedAt, setSavedAt] = useState<string | null>(initial.updated_at);
   const [publishing, setPublishing] = useState(false);
   const [published, setPublished] = useState(false);
+  const [emailResult, setEmailResult] = useState<PublishEmailResult | null>(null);
   const [modal, setModal] = useState<ModalState>('none');
   const dirty = useRef(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -68,7 +70,7 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
   const setIlrReview = (ilrReview: IlrReview) =>
     patch({ content: { ...d.content, ilrReview } });
 
-  const doPublish = async () => {
+  const doPublish = async (recipientIds: string[]) => {
     setModal('none');
     setPublishing(true);
     await updateDebrief(d.id, {
@@ -77,11 +79,15 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
       incident_type: d.incident_type, location: d.location, summary: d.summary,
       content: d.content, author: d.author, organisation: d.organisation,
     });
-    await publishDebrief(d.id);
+    const { email } = await publishDebrief(d.id, recipientIds);
+    setEmailResult(email);
     setPublishing(false);
     setPublished(true);
     notifyDebriefPublished(d.title, d.id);
-    setTimeout(() => router.push('/'), 2500);
+    // Email outcomes worth reading (failures) hold the screen; a clean send returns to the dashboard.
+    if (!email || (!email.error && email.sent === email.attempted)) {
+      setTimeout(() => router.push('/'), 3500);
+    }
   };
 
   const doDelete = async () => {
@@ -101,7 +107,28 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
         </div>
         <div className="text-center">
           <h2 className="serif mb-2 text-[28px] text-[var(--ink-100)]">Debrief Published</h2>
-          <p className="font-mono text-[13px] text-[var(--ink-500)]">Returning to dashboard…</p>
+          {emailResult ? (
+            emailResult.error ? (
+              <p className="mx-auto mb-2 max-w-md font-mono text-[13px] leading-relaxed text-[var(--nr-red)]">
+                {emailResult.error}
+              </p>
+            ) : emailResult.attempted > 0 ? (
+              <p className="mb-2 font-mono text-[13px] text-[var(--ink-400)]">
+                Emailed {emailResult.sent} recipient{emailResult.sent === 1 ? '' : 's'}
+                {emailResult.pdfAttached ? ' with the report PDF attached' : ' (link only — PDF render unavailable)'}
+                .
+              </p>
+            ) : (
+              <p className="mb-2 font-mono text-[13px] text-[var(--ink-500)]">No email notice sent.</p>
+            )
+          ) : null}
+          {emailResult?.error ? (
+            <button className="btn btn-ghost mt-2" onClick={() => router.push('/')}>
+              Back to dashboard
+            </button>
+          ) : (
+            <p className="font-mono text-[13px] text-[var(--ink-500)]">Returning to dashboard…</p>
+          )}
         </div>
       </div>
     );
@@ -110,13 +137,8 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
   return (
     <div className="mx-auto max-w-5xl px-6 py-6">
       {/* Confirm modals */}
-      <ConfirmModal
+      <PublishModal
         open={modal === 'publish'}
-        title="Publish debrief?"
-        message="This will move the debrief to the published section where recipients can view it and post responses to directives."
-        confirmLabel="Publish"
-        cancelLabel="Cancel"
-        variant="primary"
         onConfirm={doPublish}
         onCancel={() => setModal('none')}
       />
