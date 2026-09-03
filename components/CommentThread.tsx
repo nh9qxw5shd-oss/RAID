@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Send, MessageSquare } from 'lucide-react';
+import { Send, MessageSquare, Loader2 } from 'lucide-react';
 import { Comment } from '@/lib/types';
 import { listComments, addComment } from '@/lib/store';
 import { fmtDateTime } from '@/lib/format';
 import { notifyCommentAdded } from '@/lib/notifications';
+import { useSession } from '@/lib/session';
 
 export default function CommentThread({
   debriefId,
@@ -16,12 +17,13 @@ export default function CommentThread({
   debriefTitle?: string;
   onCommentAdded?: (c: Comment) => void;
 }) {
+  const { session } = useSession();
   const [comments, setComments] = useState<Comment[]>([]);
   const [author, setAuthor] = useState('');
-  const [org, setOrg] = useState('');
   const [body, setBody] = useState('');
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
+  const [postError, setPostError] = useState<string | null>(null);
 
   useEffect(() => {
     listComments(debriefId)
@@ -32,12 +34,18 @@ export default function CommentThread({
   const submit = async () => {
     if (!body.trim()) return;
     setPosting(true);
-    const c = await addComment(debriefId, author.trim(), org.trim(), body.trim());
-    setComments((prev) => [...prev, c]);
-    onCommentAdded?.(c);
-    setBody('');
-    setPosting(false);
-    notifyCommentAdded(debriefTitle);
+    setPostError(null);
+    try {
+      const c = await addComment(debriefId, author.trim(), body.trim());
+      setComments((prev) => [...prev, c]);
+      onCommentAdded?.(c);
+      setBody('');
+      notifyCommentAdded(debriefTitle);
+    } catch (err) {
+      setPostError(err instanceof Error ? err.message : 'Failed to post — please try again.');
+    } finally {
+      setPosting(false);
+    }
   };
 
   return (
@@ -65,8 +73,10 @@ export default function CommentThread({
                 <div className="mb-1.5 flex items-baseline justify-between gap-3">
                   <span className="text-[15px] font-semibold text-[var(--ink-100)]">
                     {c.author}
-                    {c.organisation && (
-                      <span className="ml-2 font-normal text-[var(--ink-400)]">· {c.organisation}</span>
+                    {(c.entity_name || c.organisation) && (
+                      <span className="ml-2 font-normal text-[var(--ink-400)]">
+                        · {c.entity_name || c.organisation}
+                      </span>
                     )}
                   </span>
                   <span className="shrink-0 font-mono text-[12px] text-[var(--ink-500)]">
@@ -81,34 +91,41 @@ export default function CommentThread({
           </ul>
         )}
 
-        <div className="rounded border border-[var(--line)] bg-[var(--bg-panel)] p-4">
-          <div className="mb-2.5 grid grid-cols-1 gap-2.5 md:grid-cols-2">
-            <input
-              className="input"
-              value={author}
-              onChange={(e) => setAuthor(e.target.value)}
-              placeholder="Your name"
+        {session ? (
+          <div className="rounded border border-[var(--line)] bg-[var(--bg-panel)] p-4">
+            <div className="mb-2.5 grid grid-cols-1 gap-2.5 md:grid-cols-2">
+              <input
+                className="input"
+                value={author}
+                onChange={(e) => setAuthor(e.target.value)}
+                placeholder="Your name"
+              />
+              <div className="flex items-center font-mono text-[12px] text-[var(--ink-500)]">
+                Posting as <span className="ml-1.5 text-[var(--nr-orange)]">{session.name}</span>
+              </div>
+            </div>
+            <textarea
+              className="textarea mb-2.5"
+              rows={3}
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              placeholder="Add commentary, a response to a directive, or a follow-up action…"
             />
-            <input
-              className="input"
-              value={org}
-              onChange={(e) => setOrg(e.target.value)}
-              placeholder="Organisation (optional)"
-            />
+            {postError && (
+              <p className="mb-2 font-mono text-[12px] text-[var(--nr-red)]">{postError}</p>
+            )}
+            <div className="flex justify-end">
+              <button className="btn btn-primary" onClick={submit} disabled={posting || !body.trim()}>
+                {posting ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
+                Post comment
+              </button>
+            </div>
           </div>
-          <textarea
-            className="textarea mb-2.5"
-            rows={3}
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder="Add commentary, a response to a directive, or a follow-up action…"
-          />
-          <div className="flex justify-end">
-            <button className="btn btn-primary" onClick={submit} disabled={posting || !body.trim()}>
-              <Send size={13} /> Post comment
-            </button>
-          </div>
-        </div>
+        ) : (
+          <p className="rounded border border-dashed border-[var(--line)] px-4 py-3 font-mono text-[13px] text-[var(--ink-500)]">
+            Sign in as your organisation (top of the page) to add commentary.
+          </p>
+        )}
       </div>
     </section>
   );

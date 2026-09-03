@@ -6,6 +6,7 @@ import { Comment } from '@/lib/types';
 import { listComments, addComment } from '@/lib/store';
 import { fmtDateTime } from '@/lib/format';
 import { notifyCommentAdded } from '@/lib/notifications';
+import { useSession } from '@/lib/session';
 
 export default function DirectiveThread({
   debriefId,
@@ -18,11 +19,11 @@ export default function DirectiveThread({
   debriefTitle: string;
   onCommentAdded?: (c: Comment) => void;
 }) {
+  const { session } = useSession();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
   const [author, setAuthor] = useState('');
-  const [org, setOrg] = useState('');
   const [body, setBody] = useState('');
   const [posting, setPosting] = useState(false);
   const [postError, setPostError] = useState<string | null>(null);
@@ -38,7 +39,7 @@ export default function DirectiveThread({
     setPosting(true);
     setPostError(null);
     try {
-      const c = await addComment(debriefId, author.trim(), org.trim(), body.trim(), directiveId);
+      const c = await addComment(debriefId, author.trim(), body.trim(), directiveId);
       setComments((prev) => [...prev, c]);
       onCommentAdded?.(c);
       setBody('');
@@ -77,9 +78,9 @@ export default function DirectiveThread({
                   <div className="mb-1 flex items-baseline justify-between gap-3">
                     <span className="text-[13px] font-semibold text-[var(--ink-100)]">
                       {c.author}
-                      {c.organisation && (
+                      {(c.entity_name || c.organisation) && (
                         <span className="ml-2 font-normal text-[var(--ink-400)]">
-                          · {c.organisation}
+                          · {c.entity_name || c.organisation}
                         </span>
                       )}
                     </span>
@@ -95,6 +96,7 @@ export default function DirectiveThread({
             </ul>
           )}
 
+          {session ? (
           <div className="rounded border border-[var(--line)] bg-[var(--bg-panel)] p-3">
             <div className="mb-2 grid grid-cols-1 gap-2 md:grid-cols-2">
               <input
@@ -103,12 +105,9 @@ export default function DirectiveThread({
                 onChange={(e) => setAuthor(e.target.value)}
                 placeholder="Your name"
               />
-              <input
-                className="input"
-                value={org}
-                onChange={(e) => setOrg(e.target.value)}
-                placeholder="Organisation (optional)"
-              />
+              <div className="flex items-center font-mono text-[11px] text-[var(--ink-500)]">
+                Posting as <span className="ml-1.5 text-[var(--nr-orange)]">{session.name}</span>
+              </div>
             </div>
             <textarea
               className="textarea mb-2"
@@ -131,6 +130,11 @@ export default function DirectiveThread({
               </button>
             </div>
           </div>
+          ) : (
+            <p className="rounded border border-dashed border-[var(--line)] px-3 py-2.5 font-mono text-[12px] text-[var(--ink-500)]">
+              Sign in as your organisation (top of the page) to respond.
+            </p>
+          )}
         </div>
       )}
     </div>

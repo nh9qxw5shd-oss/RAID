@@ -235,6 +235,10 @@ main { position: relative; z-index: 1; }
   .report-document .print-reply { border-left: 2px solid #ccc; padding-left: 10px; margin-top: 6px; page-break-inside: avoid; }
   .report-document .print-reply-meta { font-size: 11px; color: #666; margin-bottom: 3px; }
   .report-document .print-reply-body { font-size: 13px; color: #222; white-space: pre-wrap; }
+  /* Reaction chips: printed as attributable support/contest tallies */
+  .report-document .rx-chip { border-color: #ccc !important; background: transparent !important; }
+  .report-document .rx-chip svg { display: inline-block; }
+  .report-document .rx-empty { display: none !important; }
   .report-document .qr-block { page-break-inside: avoid; }
   .report-document .qr-code { border: 1px solid #ccc !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .report-document .qr-caption-title { color: #E05206 !important; }

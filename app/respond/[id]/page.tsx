@@ -3,21 +3,28 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Download, Loader2 } from 'lucide-react';
-import { Comment, Debrief } from '@/lib/types';
-import { getDebrief, listAllComments } from '@/lib/store';
+import { ArrowLeft, ChevronDown, ChevronUp, Download, Loader2, ShieldCheck } from 'lucide-react';
+import { Comment, Debrief, EntityResponse, Reaction } from '@/lib/types';
+import { getDebrief, listAllComments, listReactions, listResponses } from '@/lib/store';
+import { useSession } from '@/lib/session';
 import CommentThread from '@/components/CommentThread';
+import EntityGate from '@/components/EntityGate';
+import EntityResponsePanel from '@/components/EntityResponsePanel';
 import ReportDocument from '@/components/ReportDocument';
 
 export default function RespondDebriefPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
+  const { session, loading: sessionLoading } = useSession();
+  const [gateOpen, setGateOpen] = useState(false);
   const [debrief, setDebrief] = useState<Debrief | null>(null);
   const [state, setState] = useState<'loading' | 'ready' | 'missing'>('loading');
 
   // Comments back the print-only blocks; responses posted here are appended so
   // a freshly generated PDF always includes the latest commentary.
   const [allComments, setAllComments] = useState<Comment[]>([]);
+  const [responses, setResponses] = useState<EntityResponse[]>([]);
+  const [reactions, setReactions] = useState<Reaction[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -33,7 +40,22 @@ export default function RespondDebriefPage() {
     });
   }, [id]);
 
+  // Refetched when the session changes so the caller's own draft appears.
+  useEffect(() => {
+    if (!id || state !== 'ready' || sessionLoading) return;
+    listResponses(id).then(setResponses).catch(() => {/* best-effort */});
+    listReactions(id).then(setReactions).catch(() => {/* best-effort */});
+  }, [id, state, sessionLoading, session?.entityId]);
+
   const handleCommentAdded = (c: Comment) => setAllComments((prev) => [...prev, c]);
+  const handleResponseSaved = (r: EntityResponse) =>
+    setResponses((prev) => {
+      const idx = prev.findIndex((x) => x.entity_id === r.entity_id);
+      return idx >= 0 ? prev.map((x, i) => (i === idx ? r : x)) : [...prev, r];
+    });
+
+  const myResponse =
+    (session && responses.find((r) => r.entity_id === session.entityId)) || null;
 
   if (state === 'loading') {
     return (
@@ -75,16 +97,53 @@ export default function RespondDebriefPage() {
       </div>
 
       <p className="no-print mb-4 text-[13px] leading-relaxed text-[var(--ink-400)]">
-        Read the report below, answer a directive, or add commentary. Use{' '}
+        Read the report below, add your organisation&apos;s viewpoint, answer a
+        directive, or add commentary. Use{' '}
         <span className="text-[var(--ink-200)]">Download PDF</span> at any time to
         generate an up-to-date copy including the latest responses.
       </p>
 
-      {/* Report document — also the print surface, identical to control's PDF */}
-      <ReportDocument debrief={d} comments={allComments} onCommentAdded={handleCommentAdded} />
+      {/* Contributor sign-in — reading stays open, contributing needs an entity session */}
+      {!sessionLoading && !session && (
+        <div className="no-print mb-5">
+          <button
+            className="flex w-full items-center gap-2.5 rounded border border-[var(--line-hi)] bg-[var(--bg-panel)] px-4 py-3 text-left transition hover:border-[var(--nr-orange)]"
+            onClick={() => setGateOpen((v) => !v)}
+          >
+            <ShieldCheck size={15} className="shrink-0 text-[var(--nr-orange)]" />
+            <span className="flex-1 text-[14px] text-[var(--ink-200)]">
+              Sign in as your organisation to add your viewpoint, support or
+              contest points, and comment.
+            </span>
+            {gateOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+          {gateOpen && (
+            <div className="mt-3">
+              <EntityGate onSignedIn={() => setGateOpen(false)} />
+            </div>
+          )}
+        </div>
+      )}
 
-      {/* General commentary (screen only) */}
+      {/* Report document — also the print surface, identical to control's PDF */}
+      <ReportDocument
+        debrief={d}
+        comments={allComments}
+        responses={responses}
+        reactions={reactions}
+        onCommentAdded={handleCommentAdded}
+        onReactionsChanged={setReactions}
+      />
+
+      {/* Own viewpoint + general commentary (screen only) */}
       <div className="no-print">
+        {session && (
+          <EntityResponsePanel
+            debriefId={d.id}
+            initial={myResponse}
+            onSaved={handleResponseSaved}
+          />
+        )}
         <CommentThread debriefId={d.id} debriefTitle={d.title} onCommentAdded={handleCommentAdded} />
       </div>
     </div>

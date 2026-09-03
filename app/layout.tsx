@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import PwaInit from '@/components/PwaInit';
+import { SessionProvider } from '@/lib/session';
 
 export const metadata: Metadata = {
   title: 'Incident Debrief — RAID',
@@ -27,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="min-h-screen antialiased">
         <PwaInit />
-        {children}
+        <SessionProvider>{children}</SessionProvider>
       </body>
     </html>
   );

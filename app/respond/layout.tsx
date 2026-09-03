@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import SessionBadge from '@/components/SessionBadge';
 
 export const metadata: Metadata = {
   title: 'Respond — RAID Incident Debrief',
@@ -27,7 +28,10 @@ export default function RespondLayout({ children }: { children: React.ReactNode 
             <span className="h-4 w-px bg-[var(--line-hi)]" />
             <span className="label-micro !text-[var(--ink-300)]">Respond</span>
           </Link>
-          <span className="label-micro">Stakeholder portal</span>
+          <span className="flex items-center gap-3">
+            <SessionBadge />
+            <span className="label-micro">Stakeholder portal</span>
+          </span>
         </div>
       </header>
       <main className="relative z-[1]">{children}</main>

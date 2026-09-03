@@ -1,9 +1,10 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Comment, Debrief, IlrAnswer, IlrReview } from '@/lib/types';
+import { Comment, Debrief, EntityResponse, IlrAnswer, IlrReview, Point, Reaction } from '@/lib/types';
 import { fmtDate, fmtDateTime } from '@/lib/format';
 import DirectiveThread from './DirectiveThread';
+import ReactionBar from './ReactionBar';
 import RespondQr from './RespondQr';
 
 /**
@@ -18,12 +19,24 @@ import RespondQr from './RespondQr';
 export default function ReportDocument({
   debrief: d,
   comments,
+  responses = [],
+  reactions = [],
   onCommentAdded,
+  onReactionsChanged,
 }: {
   debrief: Debrief;
   comments: Comment[];
+  /** Entity viewpoints — only submitted ones are rendered. */
+  responses?: EntityResponse[];
+  /** Thumb up/down votes across all points of the debrief. */
+  reactions?: Reaction[];
   onCommentAdded?: (c: Comment) => void;
+  onReactionsChanged?: (all: Reaction[]) => void;
 }) {
+  const submittedResponses = useMemo(
+    () => responses.filter((r) => r.status === 'submitted'),
+    [responses],
+  );
   const repliesByDirective = useMemo(() => {
     const map = new Map<string, Comment[]>();
     for (const c of comments) {
@@ -47,6 +60,12 @@ export default function ReportDocument({
     ['Location', d.location || '—'],
   ] as const;
 
+  const refsMeta = [
+    ['TDA Ref', d.tda_ref],
+    ['Minutes Ref', d.minutes_ref],
+    ['Cancellation Ref', d.cancellation_ref],
+  ].filter(([, v]) => v) as Array<[string, string]>;
+
   return (
     <article className="report-document card tick-corners p-8">
       <header className="rd-rule mb-6 border-b border-[var(--line)] pb-5">
@@ -67,6 +86,16 @@ export default function ReportDocument({
             </div>
           ))}
         </div>
+        {refsMeta.length > 0 && (
+          <div className="rd-muted mt-2 grid grid-cols-2 gap-x-8 gap-y-1 font-mono text-[13px] text-[var(--ink-400)] sm:grid-cols-4">
+            {refsMeta.map(([k, v]) => (
+              <div key={k}>
+                <span className="block text-[11px] uppercase tracking-[0.16em] text-[var(--ink-500)]">{k}</span>
+                <span className="text-[var(--ink-300)]">{v}</span>
+              </div>
+            ))}
+          </div>
+        )}
         {(d.author || d.organisation) && (
           <div className="rd-muted mt-3 font-mono text-[12px] text-[var(--ink-500)]">
             Lead: {d.author || '—'}
@@ -87,12 +116,24 @@ export default function ReportDocument({
 
       {/* A */}
       <Block letter="A" title="Actions" accent="var(--nr-green)">
-        <PointList items={d.content.actions.map((a) => a.text)} empty="No actions recorded." />
+        <PointList
+          debriefId={d.id}
+          points={d.content.actions}
+          reactions={reactions}
+          onReactionsChanged={onReactionsChanged}
+          empty="No actions recorded."
+        />
       </Block>
 
       {/* I */}
       <Block letter="I" title="Inactions" accent="var(--nr-red)">
-        <PointList items={d.content.inactions.map((a) => a.text)} empty="No inactions recorded." />
+        <PointList
+          debriefId={d.id}
+          points={d.content.inactions}
+          reactions={reactions}
+          onReactionsChanged={onReactionsChanged}
+          empty="No inactions recorded."
+        />
       </Block>
 
       {/* D */}
@@ -157,6 +198,53 @@ export default function ReportDocument({
 
       {/* ILR Stage 1 Review */}
       {d.content.ilrReview && <IlrReviewBlock review={d.content.ilrReview} />}
+
+      {/* Entity viewpoints — stored alongside the Control original */}
+      {submittedResponses.length > 0 && (
+        <Block letter="V" title="Entity Viewpoints">
+          <div className="space-y-5">
+            {submittedResponses.map((r) => (
+              <div key={r.id} className="rd-rule border-l-2 border-[var(--line-hi)] pl-4">
+                <div className="mb-1.5 flex items-baseline justify-between gap-3">
+                  <span className="rd-accent font-mono text-[13px] font-medium uppercase tracking-[0.14em] text-[var(--nr-orange)]">
+                    {r.entity_name}
+                  </span>
+                  {r.submitted_at && (
+                    <span className="rd-muted shrink-0 font-mono text-[11px] text-[var(--ink-500)]">
+                      Submitted {fmtDateTime(r.submitted_at)}
+                    </span>
+                  )}
+                </div>
+                {r.content.narrative.trim() && (
+                  <p className="mb-2.5 whitespace-pre-wrap text-[14px] leading-relaxed text-[var(--ink-300)]">
+                    {r.content.narrative}
+                  </p>
+                )}
+                {r.content.actions.some((p) => p.text.trim()) && (
+                  <ViewpointPoints
+                    label="Actions — what worked"
+                    color="var(--nr-green)"
+                    points={r.content.actions}
+                    debriefId={d.id}
+                    reactions={reactions}
+                    onReactionsChanged={onReactionsChanged}
+                  />
+                )}
+                {r.content.inactions.some((p) => p.text.trim()) && (
+                  <ViewpointPoints
+                    label="Inactions — gaps"
+                    color="var(--nr-red)"
+                    points={r.content.inactions}
+                    debriefId={d.id}
+                    reactions={reactions}
+                    onReactionsChanged={onReactionsChanged}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </Block>
+      )}
 
       {/* Print-only: general comments */}
       {generalComments.length > 0 && (
@@ -312,16 +400,78 @@ function IlrReviewBlock({ review }: { review: IlrReview }) {
   );
 }
 
-function PointList({ items, empty }: { items: string[]; empty: string }) {
-  const filtered = items.filter((t) => t.trim());
+function ViewpointPoints({
+  label,
+  color,
+  points,
+  debriefId,
+  reactions,
+  onReactionsChanged,
+}: {
+  label: string;
+  color: string;
+  points: Point[];
+  debriefId: string;
+  reactions: Reaction[];
+  onReactionsChanged?: (all: Reaction[]) => void;
+}) {
+  return (
+    <div className="mb-2">
+      <div className="mb-1 font-mono text-[11px] uppercase tracking-[0.14em]" style={{ color }}>
+        {label}
+      </div>
+      <ul className="space-y-1">
+        {points
+          .filter((p) => p.text.trim())
+          .map((p) => (
+            <li key={p.id} className="flex gap-2.5 text-[14px] leading-relaxed text-[var(--ink-300)]">
+              <span className="rd-accent mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[var(--nr-orange)]" />
+              <span className="flex-1">
+                {p.text}
+                <ReactionBar
+                  debriefId={debriefId}
+                  pointId={p.id}
+                  reactions={reactions}
+                  onChanged={onReactionsChanged}
+                />
+              </span>
+            </li>
+          ))}
+      </ul>
+    </div>
+  );
+}
+
+function PointList({
+  debriefId,
+  points,
+  reactions,
+  onReactionsChanged,
+  empty,
+}: {
+  debriefId: string;
+  points: Point[];
+  reactions: Reaction[];
+  onReactionsChanged?: (all: Reaction[]) => void;
+  empty: string;
+}) {
+  const filtered = points.filter((p) => p.text.trim());
   if (filtered.length === 0)
     return <p className="rd-muted text-[14px] text-[var(--ink-500)]">{empty}</p>;
   return (
     <ul className="space-y-1.5">
-      {filtered.map((t, i) => (
-        <li key={i} className="flex gap-2.5 text-[15px] leading-relaxed text-[var(--ink-300)]">
+      {filtered.map((p) => (
+        <li key={p.id} className="flex gap-2.5 text-[15px] leading-relaxed text-[var(--ink-300)]">
           <span className="rd-accent mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[var(--nr-orange)]" />
-          {t}
+          <span className="flex-1">
+            {p.text}
+            <ReactionBar
+              debriefId={debriefId}
+              pointId={p.id}
+              reactions={reactions}
+              onChanged={onReactionsChanged}
+            />
+          </span>
         </li>
       ))}
     </ul>

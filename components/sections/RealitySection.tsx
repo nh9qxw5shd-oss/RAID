@@ -6,7 +6,16 @@ import { INCIDENT_TYPES, Debrief } from '@/lib/types';
 
 type RealityFields = Pick<
   Debrief,
-  'ref' | 'title' | 'incident_date' | 'incident_time' | 'incident_type' | 'location' | 'summary'
+  | 'ref'
+  | 'tda_ref'
+  | 'minutes_ref'
+  | 'cancellation_ref'
+  | 'title'
+  | 'incident_date'
+  | 'incident_time'
+  | 'incident_type'
+  | 'location'
+  | 'summary'
 >;
 
 export default function RealitySection({
@@ -76,6 +85,34 @@ export default function RealitySection({
             value={value.location}
             onChange={(e) => onChange({ location: e.target.value })}
             placeholder="e.g. ECML, Newark area — Up Main"
+          />
+        </div>
+
+        <div className="md:col-span-4">
+          <label className="label-micro mb-1.5 block">TDA Ref</label>
+          <input
+            className="input input-mono"
+            value={value.tda_ref}
+            onChange={(e) => onChange({ tda_ref: e.target.value })}
+            placeholder="TDA reference"
+          />
+        </div>
+        <div className="md:col-span-4">
+          <label className="label-micro mb-1.5 block">Minutes Ref</label>
+          <input
+            className="input input-mono"
+            value={value.minutes_ref}
+            onChange={(e) => onChange({ minutes_ref: e.target.value })}
+            placeholder="Meeting minutes reference"
+          />
+        </div>
+        <div className="md:col-span-4">
+          <label className="label-micro mb-1.5 block">Cancellation Ref</label>
+          <input
+            className="input input-mono"
+            value={value.cancellation_ref}
+            onChange={(e) => onChange({ cancellation_ref: e.target.value })}
+            placeholder="Cancellation reference"
           />
         </div>
 

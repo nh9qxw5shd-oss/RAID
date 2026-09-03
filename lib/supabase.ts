@@ -1,18 +1,12 @@
 'use client';
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-
-let _client: SupabaseClient | null = null;
-
-export function getSupabase(): SupabaseClient | null {
-  if (typeof window === 'undefined') return null;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return null;
-  if (!_client) _client = createClient(url, key, { auth: { persistSession: false } });
-  return _client;
-}
-
+/**
+ * Backend detection. When Supabase is configured the app runs in server
+ * mode — all data access goes through the Next.js API routes (see
+ * lib/store.ts), which hold the service role key server-side. The browser
+ * itself never talks to Supabase directly any more; these public env vars
+ * simply signal that a backend exists.
+ */
 export function isSupabaseConfigured(): boolean {
   return !!(
     process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY

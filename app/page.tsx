@@ -5,12 +5,24 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Plus, FileText, Loader2 } from 'lucide-react';
 import Header from '@/components/Header';
+import ControlGate from '@/components/ControlGate';
 import StatusPill from '@/components/StatusPill';
 import { Debrief } from '@/lib/types';
 import { listDebriefs, createDebrief } from '@/lib/store';
 import { fmtDate, fmtRelative } from '@/lib/format';
 
 export default function DashboardPage() {
+  return (
+    <>
+      <Header />
+      <ControlGate>
+        <Dashboard />
+      </ControlGate>
+    </>
+  );
+}
+
+function Dashboard() {
   const router = useRouter();
   const [debriefs, setDebriefs] = useState<Debrief[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,7 +45,6 @@ export default function DashboardPage() {
 
   return (
     <>
-      <Header />
       <main className="mx-auto max-w-6xl px-6 py-8">
         <div className="mb-8 flex items-end justify-between">
           <div>
