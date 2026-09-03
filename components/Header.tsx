@@ -2,13 +2,16 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { Bell, BellOff, X, CheckCircle2, AlertTriangle, Smartphone } from 'lucide-react';
+import { Bell, BellOff, X, CheckCircle2, AlertTriangle, Smartphone, Settings } from 'lucide-react';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { getPermission, requestPermission, registerServiceWorker } from '@/lib/notifications';
+import { useSession } from '@/lib/session';
+import SessionBadge from './SessionBadge';
 
 type NotifState = 'unsupported' | 'default' | 'granted' | 'denied';
 
 export default function Header() {
+  const { session } = useSession();
   const [now, setNow] = useState('');
   const [configured, setConfigured] = useState(true);
   const [notifPerm, setNotifPerm] = useState<NotifState>('default');
@@ -91,6 +94,18 @@ export default function Header() {
             </span>
           )}
           <span className="font-mono text-[13px] text-[var(--ink-500)]">{now}</span>
+          <SessionBadge />
+
+          {session?.isControl && (
+            <Link
+              href="/settings"
+              title="Settings — entities & distribution list"
+              aria-label="Settings"
+              className="flex items-center justify-center rounded p-1 text-[var(--ink-400)] transition-colors hover:text-[var(--ink-200)]"
+            >
+              <Settings size={15} />
+            </Link>
+          )}
 
           {/* Bell — always visible */}
           <div className="relative">

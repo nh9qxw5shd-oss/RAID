@@ -5,12 +5,24 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 import Header from '@/components/Header';
+import ControlGate from '@/components/ControlGate';
 import DebriefEditor from '@/components/DebriefEditor';
 import DebriefReview from '@/components/DebriefReview';
 import { Debrief } from '@/lib/types';
 import { getDebrief } from '@/lib/store';
 
 export default function DebriefPage() {
+  return (
+    <>
+      <Header />
+      <ControlGate>
+        <DebriefLoader />
+      </ControlGate>
+    </>
+  );
+}
+
+function DebriefLoader() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
   const [debrief, setDebrief] = useState<Debrief | null>(null);
@@ -30,7 +42,6 @@ export default function DebriefPage() {
 
   return (
     <>
-      <Header />
       {state === 'loading' && (
         <div className="flex items-center justify-center py-32 font-mono text-[14px] text-[var(--ink-500)]">
           <Loader2 size={16} className="mr-2 animate-spin" /> Loading…
