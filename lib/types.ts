@@ -25,12 +25,11 @@ export interface DirectiveQuestion {
   text: string;
 }
 
-/** A block of questions addressed to a named party, with a required action. */
+/** A block of questions addressed to a named party. */
 export interface Directive {
   id: string;
   to: string;
   questions: DirectiveQuestion[];
-  directive: string;
 }
 
 // ─── ILR Stage 1 Review ─────────────────────────────────────────────────
@@ -129,8 +128,10 @@ export interface Entity {
   is_control: boolean;
   active: boolean;
   sort_order: number;
-  /** Whether a passcode has been set — the code itself is never exposed. */
+  /** Whether a passcode has been set. */
   has_passcode: boolean;
+  /** The 4-digit code itself — only returned to Control sessions. */
+  passcode?: string;
 }
 
 /** The signed-in entity, as reported by the session cookie. */

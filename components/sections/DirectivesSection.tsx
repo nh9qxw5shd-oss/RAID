@@ -5,8 +5,6 @@ import { Directive } from '@/lib/types';
 import { uid } from '@/lib/format';
 import { Plus, X } from 'lucide-react';
 
-const DEFAULT_DIRECTIVE = 'Response requested within 48 hours';
-
 export default function DirectivesSection({
   blocks,
   onChange,
@@ -17,7 +15,7 @@ export default function DirectivesSection({
   const addBlock = () =>
     onChange([
       ...blocks,
-      { id: uid(), to: '', questions: [{ id: uid(), text: '' }], directive: DEFAULT_DIRECTIVE },
+      { id: uid(), to: '', questions: [{ id: uid(), text: '' }] },
     ]);
   const removeBlock = (id: string) => onChange(blocks.filter((b) => b.id !== id));
   const patchBlock = (id: string, patch: Partial<Directive>) =>
@@ -97,18 +95,9 @@ export default function DirectivesSection({
             </div>
           ))}
 
-          <button type="button" className="btn btn-ghost mb-3 mt-1" onClick={() => addQ(block.id)}>
+          <button type="button" className="btn btn-ghost mt-1" onClick={() => addQ(block.id)}>
             <Plus size={13} /> Add question
           </button>
-
-          <div className="flex items-center gap-2.5 border-t border-[var(--line)] pt-3">
-            <span className="label-micro shrink-0">Required</span>
-            <input
-              className="input"
-              value={block.directive}
-              onChange={(e) => patchBlock(block.id, { directive: e.target.value })}
-            />
-          </div>
         </div>
       ))}
 

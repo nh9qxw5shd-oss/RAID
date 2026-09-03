@@ -53,6 +53,8 @@ async function api<T>(
 ): Promise<T> {
   const { json, ...rest } = init ?? {};
   const res = await fetch(`/api${path}`, {
+    // Never let the browser or an intermediate cache serve a stale API read.
+    cache: 'no-store',
     ...rest,
     ...(json !== undefined
       ? { headers: { 'Content-Type': 'application/json', ...(rest.headers || {}) }, body: JSON.stringify(json) }

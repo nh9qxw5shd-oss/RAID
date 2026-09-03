@@ -254,7 +254,7 @@ export default function IlrReviewSection({
         {/* Q2 — Level of Disruption */}
         <QuestionRow
           number={2}
-          question="Did you classify the Level of Disruption?"
+          question="How was the incident classified?"
           answer={review.q2}
           onChange={(p) => patch('q2', p)}
           showCommentOn={undefined}
@@ -267,7 +267,7 @@ export default function IlrReviewSection({
                   className="input w-36"
                   value={review.q2.level ?? ''}
                   onChange={(e) => patch('q2', { level: e.target.value })}
-                  placeholder="e.g. Level 2"
+                  placeholder="e.g. Red"
                 />
               </div>
               <SubToggle
@@ -282,7 +282,7 @@ export default function IlrReviewSection({
         {/* Q3 — Service Containment / TRC */}
         <QuestionRow
           number={3}
-          question="Did you agree Service Containment via TRC call within 10 minutes?"
+          question="Did you agree initial service status and options with TRC / Sig within 10 min?"
           answer={review.q3}
           onChange={(p) => patch('q3', p)}
           commentLabel="Comments"
@@ -292,7 +292,7 @@ export default function IlrReviewSection({
         {/* Q4 — Huddle */}
         <QuestionRow
           number={4}
-          question="Did you hold a first Huddle?"
+          question="Was ITSR implemented — if so, when was the first call / huddle?"
           answer={review.q4}
           onChange={(p) => patch('q4', p)}
           commentLabel="Comments"
@@ -301,7 +301,7 @@ export default function IlrReviewSection({
           {review.q4.answer === 'yes' && (
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-2">
-                <span className="label-micro">Time held</span>
+                <span className="label-micro">First call / huddle</span>
                 <TimePicker
                   value={review.q4.huddleTime ?? ''}
                   onChange={(v) => patch('q4', { huddleTime: v })}

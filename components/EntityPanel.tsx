@@ -96,9 +96,34 @@ export default function EntityPanel() {
                     </span>
                   )}
                 </span>
-                <span className="font-mono text-[11px] uppercase tracking-wide text-[var(--ink-500)]">
-                  {e.has_passcode ? 'Passcode set' : 'No passcode — cannot sign in'}
-                </span>
+                {e.has_passcode ? (
+                  <span className="flex items-center gap-1.5">
+                    <span className="font-mono text-[11px] uppercase tracking-wide text-[var(--ink-500)]">
+                      Passcode
+                    </span>
+                    {e.passcode ? (
+                      <span
+                        className="rounded border px-2 py-0.5 font-mono text-[14px] font-medium tracking-[0.3em]"
+                        style={{
+                          borderColor: 'var(--line-hi)',
+                          background: 'var(--bg-base)',
+                          color: 'var(--ink-100)',
+                        }}
+                        title="Share this code with the organisation’s stakeholders"
+                      >
+                        {e.passcode}
+                      </span>
+                    ) : (
+                      <span className="font-mono text-[11px] uppercase tracking-wide text-[var(--ink-500)]">
+                        set
+                      </span>
+                    )}
+                  </span>
+                ) : (
+                  <span className="font-mono text-[11px] uppercase tracking-wide text-[var(--ink-500)]">
+                    No passcode — cannot sign in
+                  </span>
+                )}
 
                 <span className="ml-auto flex items-center gap-2">
                   {savedSlug === e.slug && (

@@ -14,7 +14,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { slug: stri
       if (typeof body.passcode !== 'string' || !/^\d{4}$/.test(body.passcode)) {
         throw new HttpError(400, 'Passcode must be exactly 4 digits.');
       }
+      // Store the hash (login verification) and the plaintext (Control view)
+      // together so they never drift.
       patch.passcode_hash = hashPasscode(params.slug, body.passcode);
+      patch.passcode = body.passcode;
     }
     if (body.active !== undefined) {
       if (params.slug === 'control' && body.active === false) {
@@ -29,10 +32,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { slug: stri
       .from('entities')
       .update(patch)
       .eq('slug', params.slug)
-      .select('id, slug, name, is_control, active, sort_order, passcode_hash')
+      .select('id, slug, name, is_control, active, sort_order, passcode_hash, passcode')
       .single();
     if (error || !data) throw new HttpError(404, 'Unknown organisation.');
 
+    // Caller is always Control (requireControl above), so the plaintext code
+    // is safe to return for immediate display.
     return NextResponse.json({
       entity: {
         id: data.id,
@@ -42,6 +47,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { slug: stri
         active: data.active,
         sort_order: data.sort_order,
         has_passcode: !!data.passcode_hash,
+        passcode: data.passcode ?? undefined,
       },
     });
   } catch (err) {
