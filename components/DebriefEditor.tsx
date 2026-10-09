@@ -11,6 +11,7 @@ import DirectivesSection from './sections/DirectivesSection';
 import IlrReviewSection from './sections/IlrReviewSection';
 import ConfirmModal from './ConfirmModal';
 import PublishModal from './PublishModal';
+import EmailOutcome from './EmailOutcome';
 import { Debrief, Point, Directive, IlrReview, PublishEmailResult, emptyIlrReview } from '@/lib/types';
 import { updateDebrief, publishDebrief, deleteDebrief } from '@/lib/store';
 import { fmtRelative } from '@/lib/format';
@@ -25,6 +26,7 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
   const [publishing, setPublishing] = useState(false);
   const [published, setPublished] = useState(false);
   const [emailResult, setEmailResult] = useState<PublishEmailResult | null>(null);
+  const [publishError, setPublishError] = useState<string | null>(null);
   const [modal, setModal] = useState<ModalState>('none');
   const dirty = useRef(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -81,7 +83,17 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
       incident_type: d.incident_type, location: d.location, summary: d.summary,
       content: d.content, author: d.author, organisation: d.organisation,
     });
-    const { email } = await publishDebrief(d.id, recipientIds);
+    setPublishError(null);
+    let email: PublishEmailResult | null;
+    try {
+      ({ email } = await publishDebrief(d.id, recipientIds));
+    } catch (err) {
+      // The request may have failed after the publish was saved (e.g. a
+      // timeout during the email send), so the status is uncertain.
+      setPublishing(false);
+      setPublishError((err as Error).message);
+      return;
+    }
     setEmailResult(email);
     setPublishing(false);
     setPublished(true);
@@ -109,21 +121,7 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
         </div>
         <div className="text-center">
           <h2 className="serif mb-2 text-[28px] text-[var(--ink-100)]">Debrief Published</h2>
-          {emailResult ? (
-            emailResult.error ? (
-              <p className="mx-auto mb-2 max-w-md font-mono text-[13px] leading-relaxed text-[var(--nr-red)]">
-                {emailResult.error}
-              </p>
-            ) : emailResult.attempted > 0 ? (
-              <p className="mb-2 font-mono text-[13px] text-[var(--ink-400)]">
-                Emailed {emailResult.sent} recipient{emailResult.sent === 1 ? '' : 's'}
-                {emailResult.pdfAttached ? ' with the report PDF attached' : ' (link only — PDF render unavailable)'}
-                .
-              </p>
-            ) : (
-              <p className="mb-2 font-mono text-[13px] text-[var(--ink-500)]">No email notice sent.</p>
-            )
-          ) : null}
+          {emailResult && <EmailOutcome result={emailResult} className="mx-auto mb-3 max-w-lg justify-center" />}
           {emailResult?.error ? (
             <button className="btn btn-ghost mt-2" onClick={() => router.push('/')}>
               Back to dashboard
@@ -184,6 +182,23 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
           </button>
         </div>
       </div>
+
+      {publishError && (
+        <div
+          className="no-print mb-3 rounded border px-4 py-3"
+          style={{ borderColor: 'var(--nr-red)', background: 'rgba(231,76,60,0.12)' }}
+          role="alert"
+        >
+          <p className="text-[14px] font-semibold text-[var(--nr-red)]">
+            Publish did not complete — the email notice may not have been sent
+          </p>
+          <p className="mt-1 text-[13px] leading-relaxed text-[var(--ink-300)]">
+            Check the debrief on the dashboard. If it shows as published, open it and use
+            &ldquo;Resend notice&rdquo;; otherwise publish again.
+          </p>
+          <p className="mt-2 break-words font-mono text-[11px] text-[var(--ink-500)]">{publishError}</p>
+        </div>
+      )}
 
       {/* Author attribution */}
       <div className="card mb-3 grid grid-cols-1 gap-3 p-4 md:grid-cols-2">

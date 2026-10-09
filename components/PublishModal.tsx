@@ -17,11 +17,15 @@ export default function PublishModal({
   open,
   onConfirm,
   onCancel,
+  mode = 'publish',
 }: {
   open: boolean;
   onConfirm: (recipientIds: string[]) => void;
   onCancel: () => void;
+  /** 'resend' reuses the recipient picker to re-send an existing notice. */
+  mode?: 'publish' | 'resend';
 }) {
+  const resend = mode === 'resend';
   const { serverMode } = useSession();
   const [recipients, setRecipients] = useState<Recipient[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -87,12 +91,12 @@ export default function PublishModal({
           </span>
           <div>
             <h2 id="publish-modal-title" className="text-[15px] font-semibold text-[var(--ink-100)]">
-              Publish debrief?
+              {resend ? 'Resend email notice?' : 'Publish debrief?'}
             </h2>
             <p className="mt-1 text-[13px] leading-relaxed text-[var(--ink-400)]">
-              The debrief becomes read-only and open for stakeholder viewpoints,
-              reactions, and commentary. Ticked recipients are emailed the
-              report with the respond link.
+              {resend
+                ? 'Ticked recipients are emailed the report with the respond link again. Untick anyone who already has it.'
+                : 'The debrief becomes read-only and open for stakeholder viewpoints, reactions, and commentary. Ticked recipients are emailed the report with the respond link.'}
             </p>
           </div>
         </div>
@@ -147,8 +151,9 @@ export default function PublishModal({
             className="btn"
             style={{ background: 'var(--nr-orange)', borderColor: 'var(--nr-orange)', color: '#fff' }}
             onClick={() => onConfirm(Array.from(selected))}
+            disabled={resend && selected.size === 0}
           >
-            Publish{selected.size > 0 ? ` & email ${selected.size}` : ''}
+            {resend ? `Email ${selected.size}` : `Publish${selected.size > 0 ? ` & email ${selected.size}` : ''}`}
           </button>
         </div>
       </div>

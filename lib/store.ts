@@ -10,6 +10,7 @@ import {
   EntityResponse,
   EntityResponseContent,
   PublishEmailResult,
+  PublishNotice,
   Reaction,
   Recipient,
   Session,
@@ -281,6 +282,26 @@ export async function publishDebrief(
   }
   const debrief = await updateDebrief(id, { status: 'published', published_at: nowIso() });
   return { debrief, email: null };
+}
+
+/** Publish-notice send history (newest first). Server mode only — local mode sends no email. */
+export async function listPublishNotices(id: string): Promise<PublishNotice[]> {
+  if (!serverMode()) return [];
+  const { notices } = await api<{ notices: PublishNotice[] }>(`/debriefs/${id}/notices`);
+  return notices;
+}
+
+/** Re-send the publish notice for an already-published debrief. */
+export async function resendPublishNotice(
+  id: string,
+  recipientIds?: string[],
+): Promise<PublishEmailResult | null> {
+  if (!serverMode()) return null;
+  const { email } = await api<{ email: PublishEmailResult }>(`/debriefs/${id}/notices`, {
+    method: 'POST',
+    json: { recipientIds },
+  });
+  return email;
 }
 
 export async function revertToDraft(id: string): Promise<Debrief | null> {

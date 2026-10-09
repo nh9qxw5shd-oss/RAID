@@ -126,6 +126,13 @@ but sends no email. PDF attachment uses `@sparticuz/chromium` on Vercel
 functions automatically; locally, set `PDF_CHROMIUM_PATH` to a Chromium
 binary. If PDF rendering fails the notice degrades to link-only.
 
+Recipients are BCC'd in chunks of 50 (Resend's per-email limit), so no
+recipient sees the rest of the list. The visible `To` is `RESEND_NOTICE_TO`
+if set (e.g. the Control mailbox), otherwise the `RESEND_FROM` address.
+Every send attempt is logged in `publish_notices` (migration 007); a
+published debrief shows its latest notice status, and Control can resend
+the notice from there.
+
 ---
 
 ## Deploying to Vercel
