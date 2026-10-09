@@ -146,6 +146,10 @@ async function deliverNotice(
   const errors: string[] = [];
   for (let i = 0; i < emails.length; i += MAX_RECIPIENTS_PER_EMAIL) {
     const chunk = emails.slice(i, i + MAX_RECIPIENTS_PER_EMAIL);
+    if (Date.now() >= deadline) {
+      errors.push(`recipients ${i + 1}–${emails.length}: not attempted — out of time`);
+      break;
+    }
     try {
       await postEmail(apiKey, { ...base, bcc: chunk }, `raid-notice-${sendId}-${i}`, deadline);
       sent += chunk.length;
@@ -181,6 +185,9 @@ async function postEmail(
           'Idempotency-Key': idempotencyKey,
         },
         body: JSON.stringify(payload),
+        // Bound each request by the time left so a hung call can't run the
+        // route past its limit before the outcome is recorded.
+        signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())),
       });
       if (res.ok) return;
       status = res.status;
@@ -195,8 +202,9 @@ async function postEmail(
       await sleep(wait);
     } catch (err) {
       // Network failure (no status) — retry; HTTP failures were decided above.
-      if (status || attempt >= MAX_SEND_ATTEMPTS || Date.now() > deadline) throw err;
-      await sleep(500 * 2 ** attempt);
+      const wait = 500 * 2 ** attempt;
+      if (status || attempt >= MAX_SEND_ATTEMPTS || Date.now() + wait >= deadline) throw err;
+      await sleep(wait);
     }
   }
 }
