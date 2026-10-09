@@ -195,6 +195,18 @@ export interface PublishEmailResult {
   error?: string;
 }
 
+/** Audit row for one publish-notice send attempt (initial publish or resend). */
+export interface PublishNotice {
+  id: string;
+  debrief_id: string;
+  kind: 'publish' | 'resend';
+  attempted: number;
+  sent: number;
+  pdf_attached: boolean;
+  error: string | null;
+  created_at: string;
+}
+
 export function emptyContent(): DebriefContent {
   return { actions: [], inactions: [], directives: [] };
 }
