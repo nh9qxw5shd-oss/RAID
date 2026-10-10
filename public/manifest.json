@@ -2,20 +2,21 @@
   "name": "RAID Incident Debrief",
   "short_name": "RAID",
   "description": "Structured, collaborative incident debriefs — Reality · Actions · Inactions · Directives",
-  "start_url": "/",
+  "start_url": "/raid",
+  "scope": "/raid",
   "display": "standalone",
   "background_color": "#070B16",
   "theme_color": "#E05206",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/icon.svg",
+      "src": "/raid/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/icon.svg",
+      "src": "/raid/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "maskable"

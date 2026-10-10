@@ -71,6 +71,18 @@ block publishing; the outcome is reported on the publish screen.
 
 ---
 
+## Mounted on the Derby Control hub
+
+The app is served under `basePath: "/raid"` (`next.config.js`): the hub at
+overseer.derbycontrol.co.uk proxies `/raid/*` to raid.derbycontrol.co.uk, and the
+same build serves the standalone hostname. Hand-built URLs (API fetches, the
+service worker, email and QR respond links, the PDF render URL) go through
+`lib/basePath.ts`. Old standalone paths (`/`, `/respond`, `/debrief/*`, `/print/*`,
+`/settings`) redirect to their `/raid` equivalents so links in emails and QR codes
+already sent keep working. Locally the app opens at http://localhost:3000/raid.
+
+---
+
 ## Running locally
 
 ```bash
@@ -78,7 +90,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000.
+Open http://localhost:3000/raid.
 
 **Local mode:** with no Supabase credentials set, the app stores everything in
 your browser's `localStorage` so it is fully usable immediately. A *Local mode*

@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import { serviceClient } from './db';
 import { PublishEmailResult } from '../types';
+import { appUrl } from '../basePath';
 
 // Resend rejects any single email with more than 50 addresses in to/cc/bcc
 // (422 validation_error). Recipients are sent in BCC chunks of this size so
@@ -75,7 +76,7 @@ async function deliverNotice(
     };
   }
 
-  const respondUrl = `${origin}/respond/${debrief.id}`;
+  const respondUrl = appUrl(origin, `/respond/${debrief.id}`);
   const title = debrief.title || 'Untitled incident';
 
   // PDF attachment — best-effort; the notice still goes out without it.

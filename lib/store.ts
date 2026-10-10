@@ -3,6 +3,7 @@
 import { isSupabaseConfigured } from './supabase';
 import { uid, nowIso } from './format';
 import { hydrateDebrief as hydrate, hydrateResponse } from './hydrate';
+import { withBase } from './basePath';
 import {
   Debrief,
   Comment,
@@ -53,7 +54,7 @@ async function api<T>(
   init?: Omit<RequestInit, 'body'> & { json?: unknown },
 ): Promise<T> {
   const { json, ...rest } = init ?? {};
-  const res = await fetch(`/api${path}`, {
+  const res = await fetch(withBase(`/api${path}`), {
     // Never let the browser or an intermediate cache serve a stale API read.
     cache: 'no-store',
     ...rest,

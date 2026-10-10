@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
+import { appUrl } from '@/lib/basePath';
 
 /**
  * QR code that deep-links to the public "Respond" portal for a single
@@ -23,7 +24,7 @@ export default function RespondQr({
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    setUrl(`${window.location.origin}/respond/${debriefId}`);
+    setUrl(appUrl(window.location.origin, `/respond/${debriefId}`));
   }, [debriefId]);
 
   if (!url) return null;

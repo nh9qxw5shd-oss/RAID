@@ -1,4 +1,5 @@
 import { signPrintToken } from './auth';
+import { appUrl } from '../basePath';
 
 /**
  * Render the report PDF by pointing headless Chromium at the token-gated
@@ -23,7 +24,7 @@ export async function renderReportPdf(debriefId: string, origin: string): Promis
   try {
     const page = await browser.newPage();
     const token = signPrintToken(debriefId);
-    const url = `${origin}/print/${debriefId}?token=${encodeURIComponent(token)}`;
+    const url = appUrl(origin, `/print/${debriefId}?token=${encodeURIComponent(token)}`);
     const res = await page.goto(url, { waitUntil: 'networkidle', timeout: 30_000 });
     if (!res || !res.ok()) {
       throw new Error(`Print page returned ${res ? res.status() : 'no response'}`);

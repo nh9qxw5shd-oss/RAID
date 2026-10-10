@@ -1,4 +1,6 @@
-const ICON = '/icon.svg';
+import { withBase } from './basePath';
+
+const ICON = withBase('/icon.svg');
 
 export function isSupported(): boolean {
   return typeof window !== 'undefined' && 'Notification' in window;
@@ -17,7 +19,7 @@ export async function requestPermission(): Promise<NotificationPermission> {
 export async function registerServiceWorker(): Promise<void> {
   if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
   try {
-    await navigator.serviceWorker.register('/sw.js');
+    await navigator.serviceWorker.register(withBase('/sw.js'), { scope: withBase('/') });
   } catch {
     // SW registration is non-critical
   }
@@ -29,7 +31,7 @@ function show(title: string, body: string, url?: string): void {
   if (url) {
     n.onclick = () => {
       window.focus();
-      window.location.href = url;
+      window.location.href = withBase(url);
     };
   }
 }

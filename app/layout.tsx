@@ -1,16 +1,17 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import PwaInit from '@/components/PwaInit';
+import { withBase } from '@/lib/basePath';
 import { SessionProvider } from '@/lib/session';
 
 export const metadata: Metadata = {
   title: 'Incident Debrief — RAID',
   description:
     'Structured, collaborative incident debriefs. Reality · Actions · Inactions · Directives.',
-  manifest: '/manifest.json',
+  manifest: withBase('/manifest.json'),
   icons: {
-    icon: '/favicon.svg',
-    apple: '/icon.svg',
+    icon: withBase('/favicon.svg'),
+    apple: withBase('/icon.svg'),
   },
   appleWebApp: {
     capable: true,
