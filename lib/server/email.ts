@@ -3,9 +3,10 @@ import { serviceClient } from './db';
 import { PublishEmailResult } from '../types';
 import { appUrl } from '../basePath';
 
-// Resend rejects any single email with more than 50 addresses in to/cc/bcc
-// (422 validation_error). Recipients are sent in BCC chunks of this size so
-// the list can grow without breaking, and so recipients — who span Network
+// Resend rejects any single email with more than 50 addresses across
+// to + cc + bcc combined (422 validation_error). Recipients are sent in BCC
+// chunks sized to leave room for the `to` address, so the list can grow
+// without breaking, and so recipients — who span Network
 // Rail, TOCs, FOCs and BTP — never see each other's addresses. The batch
 // endpoint is not used because it does not support attachments.
 const MAX_RECIPIENTS_PER_EMAIL = 50;
@@ -142,11 +143,24 @@ async function deliverNotice(
   // Shared across the chunks of this send so a retried chunk is never
   // delivered twice (Resend Idempotency-Key, valid for 24h).
   const sendId = randomUUID();
-  const emails = recipients.map((r) => r.email);
+  // The `to` address counts towards Resend's 50, so each BCC chunk is
+  // 50 minus the `to` list. Duplicates and the `to` address itself are
+  // dropped from BCC so no one receives the notice twice.
+  const toSet = new Set(base.to.map((e) => e.trim().toLowerCase()));
+  const seen = new Set<string>();
+  const emails = recipients
+    .map((r) => r.email.trim())
+    .filter((e) => {
+      const k = e.toLowerCase();
+      if (!e || toSet.has(k) || seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  const chunkSize = MAX_RECIPIENTS_PER_EMAIL - base.to.length;
   let sent = 0;
   const errors: string[] = [];
-  for (let i = 0; i < emails.length; i += MAX_RECIPIENTS_PER_EMAIL) {
-    const chunk = emails.slice(i, i + MAX_RECIPIENTS_PER_EMAIL);
+  for (let i = 0; i < emails.length; i += chunkSize) {
+    const chunk = emails.slice(i, i + chunkSize);
     if (Date.now() >= deadline) {
       errors.push(`recipients ${i + 1}–${emails.length}: not attempted — out of time`);
       break;
