@@ -6,6 +6,7 @@ import { EntityResponse, EntityResponseContent, Point, emptyResponseContent } fr
 import { saveMyResponse } from '@/lib/store';
 import { uid, fmtDateTime } from '@/lib/format';
 import { useSession } from '@/lib/session';
+import AutoTextarea from './AutoTextarea';
 
 /**
  * The signed-in entity's own viewpoint on a published debrief: what worked,
@@ -155,11 +156,11 @@ export default function EntityResponsePanel({
           </div>
 
           <label className="label-micro mb-1.5 block">Narrative</label>
-          <textarea
-            className="textarea mb-3"
+          <AutoTextarea
+            className="textarea block mb-3"
             rows={4}
             value={content.narrative}
-            onChange={(e) => patch({ narrative: e.target.value })}
+            onChange={(v) => patch({ narrative: v })}
             placeholder="Your organisation's account and overall view of the incident…"
           />
 

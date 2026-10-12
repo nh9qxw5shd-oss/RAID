@@ -2,6 +2,7 @@
 
 import SectionCard from '../SectionCard';
 import TimePicker from '../TimePicker';
+import AutoTextarea from '../AutoTextarea';
 import { INCIDENT_TYPES, Debrief } from '@/lib/types';
 
 type RealityFields = Pick<
@@ -40,10 +41,11 @@ export default function RealitySection({
         </div>
         <div className="md:col-span-5">
           <label className="label-micro mb-1.5 block">Title</label>
-          <input
-            className="input"
+          <AutoTextarea
+            singleLine
+            className="input block"
             value={value.title}
-            onChange={(e) => onChange({ title: e.target.value })}
+            onChange={(v) => onChange({ title: v })}
             placeholder="Short incident title"
           />
         </div>
@@ -81,10 +83,11 @@ export default function RealitySection({
         </div>
         <div className="md:col-span-6">
           <label className="label-micro mb-1.5 block">Location</label>
-          <input
-            className="input"
+          <AutoTextarea
+            singleLine
+            className="input block"
             value={value.location}
-            onChange={(e) => onChange({ location: e.target.value })}
+            onChange={(v) => onChange({ location: v })}
             placeholder="e.g. ECML, Newark area — Up Main"
           />
         </div>
@@ -131,11 +134,11 @@ export default function RealitySection({
 
         <div className="md:col-span-12">
           <label className="label-micro mb-1.5 block">Factual Summary</label>
-          <textarea
-            className="textarea"
+          <AutoTextarea
+            className="textarea block"
             rows={3}
             value={value.summary}
-            onChange={(e) => onChange({ summary: e.target.value })}
+            onChange={(v) => onChange({ summary: v })}
             placeholder="A concise, factual account of what happened. Objective and agreed — interpretation belongs below."
           />
         </div>

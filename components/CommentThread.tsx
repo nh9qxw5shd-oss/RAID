@@ -7,6 +7,7 @@ import { listComments, addComment } from '@/lib/store';
 import { fmtDateTime } from '@/lib/format';
 import { notifyCommentAdded } from '@/lib/notifications';
 import { useSession } from '@/lib/session';
+import AutoTextarea from './AutoTextarea';
 
 export default function CommentThread({
   debriefId,
@@ -104,11 +105,11 @@ export default function CommentThread({
                 Posting as <span className="ml-1.5 text-[var(--nr-orange)]">{session.name}</span>
               </div>
             </div>
-            <textarea
-              className="textarea mb-2.5"
+            <AutoTextarea
+              className="textarea block mb-2.5"
               rows={3}
               value={body}
-              onChange={(e) => setBody(e.target.value)}
+              onChange={setBody}
               placeholder="Add commentary, a response to a directive, or a follow-up action…"
             />
             {postError && (

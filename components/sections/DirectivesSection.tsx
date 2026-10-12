@@ -1,6 +1,7 @@
 'use client';
 
 import SectionCard from '../SectionCard';
+import AutoTextarea from '../AutoTextarea';
 import { Directive } from '@/lib/types';
 import { uid } from '@/lib/format';
 import { Plus, X } from 'lucide-react';
@@ -50,17 +51,18 @@ export default function DirectivesSection({
     >
       {blocks.map((block) => (
         <div key={block.id} className="mb-3 rounded border border-[var(--line)] bg-[var(--bg-panel)] p-4">
-          <div className="mb-3 flex items-center gap-2.5 border-b border-[var(--line)] pb-3">
+          <div className="mb-3 flex items-start gap-2.5 border-b border-[var(--line)] pb-3">
             <span
-              className="pill"
+              className="pill mt-2"
               style={{ background: 'var(--nr-orange-glow)', border: '1px solid rgba(224,82,6,0.3)', color: 'var(--nr-orange)' }}
             >
               To
             </span>
-            <input
-              className="input flex-1"
+            <AutoTextarea
+              singleLine
+              className="input block flex-1"
               value={block.to}
-              onChange={(e) => patchBlock(block.id, { to: e.target.value })}
+              onChange={(v) => patchBlock(block.id, { to: v })}
               placeholder="Recipient party / function / organisation"
             />
             <button
@@ -74,14 +76,15 @@ export default function DirectivesSection({
           </div>
 
           {block.questions.map((q, idx) => (
-            <div key={q.id} className="mb-2 flex items-center gap-2">
-              <span className="w-7 shrink-0 font-mono text-[13px] text-[var(--ink-400)]">
+            <div key={q.id} className="mb-2 flex items-start gap-2">
+              <span className="mt-2.5 w-7 shrink-0 font-mono text-[13px] text-[var(--ink-400)]">
                 Q{idx + 1}
               </span>
-              <input
-                className="input"
+              <AutoTextarea
+                singleLine
+                className="input block"
                 value={q.text}
-                onChange={(e) => updateQ(block.id, q.id, e.target.value)}
+                onChange={(v) => updateQ(block.id, q.id, v)}
                 placeholder="Question requiring a response…"
               />
               <button

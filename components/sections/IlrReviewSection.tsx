@@ -2,6 +2,7 @@
 
 import { Check, X } from 'lucide-react';
 import SectionCard from '../SectionCard';
+import AutoTextarea from '../AutoTextarea';
 import TimePicker from '../TimePicker';
 import { IlrAnswer, IlrReview, emptyIlrReview } from '@/lib/types';
 
@@ -130,11 +131,11 @@ function QuestionRow({
           {showComment && (
             <div>
               <label className="label-micro mb-1.5 block">{commentLabel}</label>
-              <textarea
-                className="textarea"
+              <AutoTextarea
+                className="textarea block"
                 rows={3}
                 value={answer.comment}
-                onChange={(e) => onChange({ comment: e.target.value })}
+                onChange={(v) => onChange({ comment: v })}
                 placeholder="Add any relevant notes…"
               />
             </div>

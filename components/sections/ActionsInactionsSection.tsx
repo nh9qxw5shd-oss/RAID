@@ -1,6 +1,7 @@
 'use client';
 
 import SectionCard from '../SectionCard';
+import AutoTextarea from '../AutoTextarea';
 import { Point } from '@/lib/types';
 import { uid } from '@/lib/format';
 import { Plus, X } from 'lucide-react';
@@ -33,11 +34,12 @@ function Column({
       </div>
 
       {rows.map((row) => (
-        <div key={row.id} className="mb-2 flex items-center gap-2">
-          <input
-            className="input"
+        <div key={row.id} className="mb-2 flex items-start gap-2">
+          <AutoTextarea
+            singleLine
+            className="input block"
             value={row.text}
-            onChange={(e) => update(row.id, e.target.value)}
+            onChange={(v) => update(row.id, v)}
             placeholder={isAction ? 'What was done well…' : 'What was missed or could improve…'}
           />
           <button

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Check, CheckCircle2, Send, Trash2, Loader2 } from 'lucide-react';
 import { notifyDebriefPublished } from '@/lib/notifications';
+import AutoTextarea from './AutoTextarea';
 import RealitySection from './sections/RealitySection';
 import ActionsInactionsSection from './sections/ActionsInactionsSection';
 import DirectivesSection from './sections/DirectivesSection';
@@ -204,19 +205,21 @@ export default function DebriefEditor({ initial }: { initial: Debrief }) {
       <div className="card mb-3 grid grid-cols-1 gap-3 p-4 md:grid-cols-2">
         <div>
           <label className="label-micro mb-1.5 block">Lead / Author</label>
-          <input
-            className="input"
+          <AutoTextarea
+            singleLine
+            className="input block"
             value={d.author}
-            onChange={(e) => patch({ author: e.target.value })}
+            onChange={(v) => patch({ author: v })}
             placeholder="Name of debrief lead"
           />
         </div>
         <div>
           <label className="label-micro mb-1.5 block">Organisation</label>
-          <input
-            className="input"
+          <AutoTextarea
+            singleLine
+            className="input block"
             value={d.organisation}
-            onChange={(e) => patch({ organisation: e.target.value })}
+            onChange={(v) => patch({ organisation: v })}
             placeholder="e.g. Network Rail — East Midlands"
           />
         </div>
